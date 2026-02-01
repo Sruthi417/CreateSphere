@@ -1,0 +1,488 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { useAuthStore } from '@/store/auth-store';
+import { creatorAPI, productAPI, tutorialAPI } from '@/lib/api-client';
+import Navbar from '@/components/navbar';
+import Footer from '@/components/footer';
+import ConfirmDialog from '@/components/modals/confirm-dialog';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
+import {
+  Package,
+  BookOpen,
+  Users,
+  Star,
+  Plus,
+  Edit,
+  Trash2,
+  RotateCcw,
+  Settings,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
+
+export default function CreatorDashboardPage() {
+  const router = useRouter();
+  const { isAuthenticated, user, userRole, creatorProfile, setCreatorProfile } = useAuthStore();
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [tutorials, setTutorials] = useState([]);
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, type: '', id: '' });
+  const [actionLoading, setActionLoading] = useState('');
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/auth/login');
+      return;
+    }
+    fetchData();
+  }, [isAuthenticated]);
+
+  const fetchData = async () => {
+    try {
+      const [profileRes, productsRes, tutorialsRes] = await Promise.all([
+        creatorAPI.getMyProfile(),
+        productAPI.getMyList().catch(() => ({ data: { data: [] } })),
+        tutorialAPI.getMyList().catch(() => ({ data: { data: [] } })),
+      ]);
+      setProfile(profileRes.data.data);
+      setCreatorProfile(profileRes.data.data?.creatorProfile);
+      setProducts(productsRes.data.data || []);
+      setTutorials(tutorialsRes.data.data || []);
+    } catch (error) {
+      toast.error('Failed to load dashboard data');
+      if (error.response?.status === 403) {
+        router.push('/creator/onboarding');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteProduct = async () => {
+    setActionLoading('delete');
+    try {
+      await productAPI.delete(deleteDialog.id);
+      toast.success('Product deleted');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to delete product');
+    } finally {
+      setActionLoading('');
+      setDeleteDialog({ open: false, type: '', id: '' });
+    }
+  };
+
+  const handleDeleteTutorial = async () => {
+    setActionLoading('delete');
+    try {
+      await tutorialAPI.delete(deleteDialog.id);
+      toast.success('Tutorial deleted');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to delete tutorial');
+    } finally {
+      setActionLoading('');
+      setDeleteDialog({ open: false, type: '', id: '' });
+    }
+  };
+
+  const handleRestoreProduct = async (productId) => {
+    setActionLoading(productId);
+    try {
+      await productAPI.restore(productId);
+      toast.success('Product restored');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to restore product');
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+  const handleRestoreTutorial = async (tutorialId) => {
+    setActionLoading(tutorialId);
+    try {
+      await tutorialAPI.restore(tutorialId);
+      toast.success('Tutorial restored');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to restore tutorial');
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+  const handleDeactivate = async () => {
+    setActionLoading('deactivate');
+    try {
+      await creatorAPI.deactivate();
+      toast.success('Creator mode deactivated');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to deactivate');
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+  const handleReactivate = async () => {
+    setActionLoading('reactivate');
+    try {
+      await creatorAPI.reactivate();
+      toast.success('Creator mode reactivated');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to reactivate');
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-1 container px-4 py-8">
+          <Skeleton className="h-10 w-48 mb-8" />
+          <div className="grid md:grid-cols-4 gap-6 mb-8">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-24" />
+            ))}
+          </div>
+          <Skeleton className="h-64" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const cp = profile?.creatorProfile || creatorProfile || {};
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+      <main className="flex-1">
+        <div className="container px-4 py-8">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
+          >
+            <div className="flex items-center gap-4">
+              <Avatar className="h-16 w-16">
+                <AvatarImage src={profile?.avatarUrl || user?.avatarUrl} />
+                <AvatarFallback className="text-xl">
+                  {cp.displayName?.charAt(0) || user?.name?.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-bold">{cp.displayName || user?.name}</h1>
+                  {cp.verified && <CheckCircle2 className="h-5 w-5 text-primary" />}
+                  {cp.isDeactivated && (
+                    <Badge variant="destructive">Deactivated</Badge>
+                  )}
+                </div>
+                <p className="text-muted-foreground">{cp.tagline || 'Creator Dashboard'}</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Link href="/creator/settings">
+                <Button variant="outline">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </Button>
+              </Link>
+              {cp.isDeactivated ? (
+                <Button onClick={handleReactivate} disabled={actionLoading === 'reactivate'}>
+                  {actionLoading === 'reactivate' && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Reactivate
+                </Button>
+              ) : (
+                <Button variant="destructive" onClick={handleDeactivate} disabled={actionLoading === 'deactivate'}>
+                  {actionLoading === 'deactivate' && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Deactivate
+                </Button>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+          >
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-2xl font-bold">{cp.followersCount || 0}</span>
+                </div>
+                <p className="text-sm text-muted-foreground">Followers</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                  <span className="text-2xl font-bold">{cp.rating?.toFixed(1) || 'N/A'}</span>
+                </div>
+                <p className="text-sm text-muted-foreground">Rating</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <Package className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-2xl font-bold">{products.length}</span>
+                </div>
+                <p className="text-sm text-muted-foreground">Products</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-2xl font-bold">{tutorials.length}</span>
+                </div>
+                <p className="text-sm text-muted-foreground">Tutorials</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Content Tabs */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Tabs defaultValue="products" className="w-full">
+              <div className="flex items-center justify-between mb-4">
+                <TabsList>
+                  <TabsTrigger value="products">
+                    <Package className="h-4 w-4 mr-2" />
+                    Products
+                  </TabsTrigger>
+                  <TabsTrigger value="tutorials">
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    Tutorials
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <TabsContent value="products">
+                <div className="flex justify-end mb-4">
+                  <Link href="/product/create">
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Product
+                    </Button>
+                  </Link>
+                </div>
+                {products.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-muted-foreground mb-4">No products yet</p>
+                      <Link href="/product/create">
+                        <Button>Create Your First Product</Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {products.map((product) => (
+                      <Card key={product._id}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                              {product.images?.[0] ? (
+                                <img src={product.images[0]} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="flex items-center justify-center h-full">
+                                  <Package className="h-8 w-8 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-semibold truncate">{product.title}</h3>
+                                <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
+                                  {product.status}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground truncate">
+                                {product.shortDescription || product.description}
+                              </p>
+                              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                  {product.averageRating?.toFixed(1) || 'N/A'}
+                                </span>
+                                <span>{product.reviewsCount || 0} reviews</span>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Link href={`/product/${product._id}`}>
+                                <Button variant="ghost" size="icon">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                              <Link href={`/product/${product._id}/edit`}>
+                                <Button variant="ghost" size="icon">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                              {product.status === 'deleted' ? (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleRestoreProduct(product._id)}
+                                  disabled={actionLoading === product._id}
+                                >
+                                  {actionLoading === product._id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <RotateCcw className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setDeleteDialog({ open: true, type: 'product', id: product._id })}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="tutorials">
+                <div className="flex justify-end mb-4">
+                  <Link href="/tutorial/create">
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Tutorial
+                    </Button>
+                  </Link>
+                </div>
+                {tutorials.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-muted-foreground mb-4">No tutorials yet</p>
+                      <Link href="/tutorial/create">
+                        <Button>Create Your First Tutorial</Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {tutorials.map((tutorial) => (
+                      <Card key={tutorial._id}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                              <div className="flex items-center justify-center h-full">
+                                <BookOpen className="h-8 w-8 text-muted-foreground" />
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-semibold truncate">{tutorial.title}</h3>
+                                <Badge variant={tutorial.status === 'active' ? 'default' : 'secondary'}>
+                                  {tutorial.status}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground truncate">
+                                {tutorial.description}
+                              </p>
+                              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                                <Badge variant="outline">{tutorial.difficulty}</Badge>
+                                <Badge variant="outline">{tutorial.type}</Badge>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Link href={`/tutorial/${tutorial._id}`}>
+                                <Button variant="ghost" size="icon">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                              <Link href={`/tutorial/${tutorial._id}/edit`}>
+                                <Button variant="ghost" size="icon">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                              {tutorial.status === 'deleted' ? (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleRestoreTutorial(tutorial._id)}
+                                  disabled={actionLoading === tutorial._id}
+                                >
+                                  {actionLoading === tutorial._id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <RotateCcw className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setDeleteDialog({ open: true, type: 'tutorial', id: tutorial._id })}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </motion.div>
+        </div>
+      </main>
+      <Footer />
+
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}
+        title={`Delete ${deleteDialog.type}?`}
+        description="This will hide the content from the marketplace. You can restore it later."
+        confirmText="Delete"
+        variant="destructive"
+        onConfirm={deleteDialog.type === 'product' ? handleDeleteProduct : handleDeleteTutorial}
+      />
+    </div>
+  );
+}
