@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authMiddleware } from "../../middlewares/auth.middleware.js";
 import { requireRole } from "../../middlewares/role.middleware.js";
+import { uploadMiddleware } from "../../middlewares/upload.middleware.js";
 
 import {
   createProduct,
@@ -44,7 +45,7 @@ productRouter.get("/creator/:creatorId", listCreatorProducts);
 //
 
 // My products (includes hidden/removed)
-productRouter.get("/me/list",authMiddleware,requireRole("creator"),listMyProducts);
+productRouter.get("/me/list", authMiddleware, requireRole("creator"), listMyProducts);
 
 
 //
@@ -53,15 +54,29 @@ productRouter.get("/me/list",authMiddleware,requireRole("creator"),listMyProduct
 // =====================
 //
 
-productRouter.post("/",authMiddleware,requireRole("creator"),createProduct);
+productRouter.post("/", authMiddleware, requireRole("creator"), createProduct);
 
-productRouter.put("/:productId",authMiddleware,requireRole("creator"),updateProduct);
+productRouter.put("/:productId", authMiddleware, requireRole("creator"), updateProduct);
 
-productRouter.delete("/:productId",authMiddleware,requireRole("creator"),removeProduct);
+productRouter.delete("/:productId", authMiddleware, requireRole("creator"), removeProduct);
 
-productRouter.post("/:productId/restore",authMiddleware,requireRole("creator"),restoreProduct);
+productRouter.post("/:productId/restore", authMiddleware, requireRole("creator"), restoreProduct);
 
+// Upload product image
+productRouter.post("/image/upload", authMiddleware, requireRole("creator"), uploadMiddleware.single("image"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: "No image uploaded" });
+  }
 
+  // Return the URL path to the uploaded file
+  // Assuming the server serves 'uploads' folder statically or via a specific route
+  const imageUrl = `/uploads/${req.file.filename}`;
+
+  return res.status(200).json({
+    success: true,
+    url: imageUrl
+  });
+});
 //
 // =====================
 //  PRODUCT DETAILS (MUST BE LAST)

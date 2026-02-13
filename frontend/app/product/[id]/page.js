@@ -32,6 +32,7 @@ import {
   Edit2,
   Trash2,
 } from 'lucide-react';
+import ProductImage from '@/components/ui/product-image';
 
 export default function ProductDetailPage({ params }) {
   const productId = params.id;
@@ -189,17 +190,12 @@ export default function ProductDetailPage({ params }) {
               className="space-y-4"
             >
               <div className="relative aspect-square rounded-lg overflow-hidden bg-muted">
-                {product.images?.[currentImageIndex] ? (
-                  <img
-                    src={product.images[currentImageIndex]}
-                    alt={product.title}
-                    className="object-cover w-full h-full"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full text-muted-foreground">
-                    No Image
-                  </div>
-                )}
+                <ProductImage
+                  src={product.images?.[currentImageIndex]}
+                  alt={product.title}
+                  fill
+                  className="object-cover w-full h-full"
+                />
                 {product.images?.length > 1 && (
                   <>
                     <Button
@@ -227,11 +223,10 @@ export default function ProductDetailPage({ params }) {
                     <button
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
-                      className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${
-                        index === currentImageIndex ? 'border-primary' : 'border-transparent'
-                      }`}
+                      className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${index === currentImageIndex ? 'border-primary' : 'border-transparent'
+                        }`}
                     >
-                      <img src={img} alt="" className="object-cover w-full h-full" />
+                      <ProductImage src={img} alt="" fill />
                     </button>
                   ))}
                 </div>

@@ -32,6 +32,7 @@ import {
   Eye,
   EyeOff,
 } from 'lucide-react';
+import ProductImage from '@/components/ui/product-image';
 
 export default function CreatorDashboardPage() {
   const router = useRouter();
@@ -313,13 +314,12 @@ export default function CreatorDashboardPage() {
                         <CardContent className="p-4">
                           <div className="flex items-center gap-4">
                             <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                              {product.images?.[0] ? (
-                                <img src={product.images[0]} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="flex items-center justify-center h-full">
-                                  <Package className="h-8 w-8 text-muted-foreground" />
-                                </div>
-                              )}
+                              <ProductImage
+                                src={product.images?.[0]}
+                                alt={product.title}
+                                fill
+                                className="object-cover"
+                              />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">

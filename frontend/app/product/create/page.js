@@ -24,13 +24,14 @@ import {
 import { toast } from 'sonner';
 import { Package, Plus, X, Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import ProductImageUpload from '@/components/product-image-upload';
 
 export default function CreateProductPage() {
   const router = useRouter();
   const { isAuthenticated, userRole } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
-  const [images, setImages] = useState(['']);
+  const [images, setImages] = useState([]);
   const [isCustomizable, setIsCustomizable] = useState(false);
 
   const {
@@ -60,27 +61,8 @@ export default function CreateProductPage() {
     }
   };
 
-  const addImageField = () => {
-    if (images.length < 10) {
-      setImages([...images, '']);
-    }
-  };
-
-  const removeImageField = (index) => {
-    if (images.length > 1) {
-      setImages(images.filter((_, i) => i !== index));
-    }
-  };
-
-  const updateImage = (index, value) => {
-    const newImages = [...images];
-    newImages[index] = value;
-    setImages(newImages);
-  };
-
   const onSubmit = async (data) => {
-    const validImages = images.filter((img) => img.trim());
-    if (validImages.length === 0) {
+    if (images.length === 0) {
       toast.error('At least one image is required');
       return;
     }
@@ -96,7 +78,7 @@ export default function CreateProductPage() {
         title: data.title,
         description: data.description,
         shortDescription: data.shortDescription,
-        images: validImages,
+        images: images,
         categoryId: data.categoryId,
         estimatedPrice: data.estimatedPrice ? parseFloat(data.estimatedPrice) : undefined,
         isCustomizable,
@@ -174,26 +156,8 @@ export default function CreateProductPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Images * (min 1, max 10)</Label>
-                      {images.map((img, index) => (
-                        <div key={index} className="flex gap-2">
-                          <Input
-                            placeholder="Image URL"
-                            value={img}
-                            onChange={(e) => updateImage(index, e.target.value)}
-                          />
-                          {images.length > 1 && (
-                            <Button type="button" variant="ghost" size="icon" onClick={() => removeImageField(index)}>
-                              <X className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                      {images.length < 10 && (
-                        <Button type="button" variant="outline" size="sm" onClick={addImageField}>
-                          <Plus className="h-4 w-4 mr-1" /> Add Image
-                        </Button>
-                      )}
+                      <Label>Images * (min 1, max 5)</Label>
+                      <ProductImageUpload images={images} setImages={setImages} />
                     </div>
 
                     <div className="space-y-2">

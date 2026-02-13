@@ -56,6 +56,9 @@ export const productAPI = {
   delete: (productId) => axiosInstance.delete(`/products/${productId}`),
   restore: (productId) => axiosInstance.post(`/products/${productId}/restore`),
   getMyList: () => axiosInstance.get('/products/me/list'),
+  uploadImage: (formData) => axiosInstance.post('/products/image/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
 };
 
 // Tutorial API
