@@ -9,6 +9,7 @@ import Footer from '@/components/footer';
 import ProductCard from '@/components/cards/product-card';
 import TutorialCard from '@/components/cards/tutorial-card';
 import StarRating from '@/components/star-rating';
+import ReportModal from '@/components/modals/report-modal';
 import { creatorAPI, productAPI, tutorialAPI, userAPI, chatAPI } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth-store';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ import {
   ChevronLeft,
   ExternalLink,
   Loader2,
+  Flag,
 } from 'lucide-react';
 
 export default function CreatorProfilePage({ params }) {
@@ -44,6 +46,7 @@ export default function CreatorProfilePage({ params }) {
   const [following, setFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [messageLoading, setMessageLoading] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   useEffect(() => {
     fetchCreator();
@@ -237,6 +240,14 @@ export default function CreatorProfilePage({ params }) {
                     {messageLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <MessageCircle className="h-4 w-4 mr-2" />}
                     Message
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="hover:bg-destructive/5 hover:text-destructive hover:border-destructive/20"
+                    onClick={() => setReportOpen(true)}
+                  >
+                    <Flag className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </motion.div>
@@ -326,6 +337,13 @@ export default function CreatorProfilePage({ params }) {
         </div>
       </main>
       <Footer />
+      <ReportModal
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        targetId={creatorId}
+        targetType="creator"
+        targetName={creator?.creatorProfile?.displayName || creator?.name}
+      />
     </div>
   );
 }

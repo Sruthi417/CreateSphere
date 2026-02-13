@@ -9,7 +9,8 @@ import {
   getCategoryBySlug,
   updateCategory,
   deactivateCategory,
-  reactivateCategory
+  reactivateCategory,
+  deleteCategory
 } from "./category.controller.js";
 
 const categoryRoutes = Router();
@@ -47,6 +48,13 @@ categoryRoutes.post(
   authMiddleware,
   requireRole("admin"),
   reactivateCategory
+);
+
+categoryRoutes.delete(
+  "/:id",
+  authMiddleware,
+  requireRole("admin"),
+  deleteCategory
 );
 
 

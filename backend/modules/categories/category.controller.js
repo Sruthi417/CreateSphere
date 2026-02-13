@@ -31,7 +31,7 @@ export const createCategory = async (req, res) => {
       slug,
       type,
       description,
-      
+
     });
 
     return res.status(201).json({
@@ -218,3 +218,47 @@ export const reactivateCategory = async (req, res) => {
     });
   }
 };
+
+/* =========================================
+   DELETE CATEGORY (ADMIN ONLY)
+========================================= */
+export const deleteCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if any products/tutorials use this category before deleting
+    const [hasProducts, hasTutorials] = await Promise.all([
+      import("../products/product.model.js").then(m => m.default.exists({ categoryId: id })),
+      import("../tutorials/tutorial.model.js").then(m => m.default.exists({ categoryId: id }))
+    ]);
+
+    if (hasProducts || hasTutorials) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot delete category that has associated products or tutorials. Use deactivate instead.",
+      });
+    }
+
+    const category = await Category.findByIdAndDelete(id);
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Category deleted permanently",
+    });
+
+  } catch (error) {
+    console.error("Delete category error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete category",
+    });
+  }
+};
+

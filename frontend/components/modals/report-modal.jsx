@@ -33,11 +33,12 @@ const REPORT_REASONS = [
   { value: 'scam', label: 'Scam or Fraud' },
 ];
 
-export default function ReportModal({ 
-  open, 
-  onOpenChange, 
-  targetId, 
-  targetType 
+export default function ReportModal({
+  open,
+  onOpenChange,
+  targetId,
+  targetType,
+  targetName
 }) {
   const [reason, setReason] = useState('');
   const [note, setNote] = useState('');
@@ -77,7 +78,7 @@ export default function ReportModal({
             Report Content
           </DialogTitle>
           <DialogDescription>
-            Help us understand what&apos;s wrong with this {targetType}. Your report will be reviewed by our team.
+            Help us understand what&apos;s wrong with {targetName ? <strong>{targetName}</strong> : `this ${targetType}`}. Your report will be reviewed by our team.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">

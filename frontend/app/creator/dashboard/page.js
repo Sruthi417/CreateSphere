@@ -31,6 +31,8 @@ import {
   Loader2,
   Eye,
   EyeOff,
+  BadgeCheck,
+  Shield,
 } from 'lucide-react';
 import ProductImage from '@/components/ui/product-image';
 
@@ -43,6 +45,7 @@ export default function CreatorDashboardPage() {
   const [tutorials, setTutorials] = useState([]);
   const [deleteDialog, setDeleteDialog] = useState({ open: false, type: '', id: '' });
   const [actionLoading, setActionLoading] = useState('');
+  const [eligibility, setEligibility] = useState(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -54,12 +57,14 @@ export default function CreatorDashboardPage() {
 
   const fetchData = async () => {
     try {
-      const [profileRes, productsRes, tutorialsRes] = await Promise.all([
+      const [profileRes, productsRes, tutorialsRes, eligibilityRes] = await Promise.all([
         creatorAPI.getMyProfile(),
         productAPI.getMyList().catch(() => ({ data: { data: [] } })),
         tutorialAPI.getMyList().catch(() => ({ data: { data: [] } })),
+        creatorAPI.checkVerificationEligibility().catch(() => ({ data: { data: null } })),
       ]);
       setProfile(profileRes.data.data);
+      setEligibility(eligibilityRes.data.data);
       setCreatorProfile(profileRes.data.data?.creatorProfile);
       setProducts(productsRes.data.data || []);
       setTutorials(tutorialsRes.data.data || []);
@@ -148,6 +153,19 @@ export default function CreatorDashboardPage() {
       fetchData();
     } catch (error) {
       toast.error('Failed to reactivate');
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+  const handleApplyVerification = async () => {
+    setActionLoading('apply-verification');
+    try {
+      await creatorAPI.applyForVerification();
+      toast.success('Verification request submitted!');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to apply');
     } finally {
       setActionLoading('');
     }
@@ -284,6 +302,10 @@ export default function CreatorDashboardPage() {
                   <TabsTrigger value="tutorials">
                     <BookOpen className="h-4 w-4 mr-2" />
                     Tutorials
+                  </TabsTrigger>
+                  <TabsTrigger value="verification">
+                    <BadgeCheck className="h-4 w-4 mr-2" />
+                    Verification
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -466,6 +488,123 @@ export default function CreatorDashboardPage() {
                     ))}
                   </div>
                 )}
+              </TabsContent>
+
+              <TabsContent value="verification">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="h-5 w-5 text-primary" />
+                      Verification Status
+                    </CardTitle>
+                    <CardDescription>
+                      Get verified to build trust with your audience and unlock exclusive features.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Current Status Banner */}
+                    <div className={`p-4 rounded-lg border flex items-center justify-between ${cp.verified
+                      ? 'bg-green-50 border-green-200 text-green-800'
+                      : cp.verificationStatus === 'requested'
+                        ? 'bg-blue-50 border-blue-200 text-blue-800'
+                        : cp.verificationStatus === 'revoked'
+                          ? 'bg-red-50 border-red-200 text-red-800'
+                          : 'bg-slate-50 border-slate-200 text-slate-800'
+                      }`}>
+                      <div className="flex items-center gap-3">
+                        {cp.verified ? (
+                          <BadgeCheck className="h-6 w-6" />
+                        ) : cp.verificationStatus === 'requested' ? (
+                          <Loader2 className="h-6 w-6 animate-spin" />
+                        ) : (
+                          <Shield className="h-6 w-6" />
+                        )}
+                        <div>
+                          <p className="font-bold">
+                            {cp.verified
+                              ? 'You are Verified!'
+                              : cp.verificationStatus === 'requested'
+                                ? 'Verification Pending'
+                                : cp.verificationStatus === 'revoked'
+                                  ? 'Verification Revoked'
+                                  : 'Not Verified'}
+                          </p>
+                          <p className="text-sm opacity-90">
+                            {cp.verified
+                              ? 'Your profile carries the verification badge.'
+                              : cp.verificationStatus === 'requested'
+                                ? 'An admin is reviewing your profile.'
+                                : cp.verificationStatus === 'revoked'
+                                  ? 'An admin has removed your verification.'
+                                  : 'Complete the requirements below to apply.'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Requirements Section */}
+                    {!cp.verified && cp.verificationStatus !== 'requested' && eligibility && (
+                      <div className="space-y-4">
+                        <h3 className="font-semibold text-lg flex items-center gap-2">
+                          <AlertCircle className="h-5 w-5 text-amber-500" />
+                          Requirements for Verification
+                        </h3>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Products Requirement */}
+                          <div className="p-4 rounded-xl bg-white border shadow-sm">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-sm font-medium text-slate-600">Active Products</span>
+                              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${eligibility.currentProducts >= eligibility.minProducts ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                                {eligibility.currentProducts} / {eligibility.minProducts}
+                              </span>
+                            </div>
+                            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full transition-all ${eligibility.currentProducts >= eligibility.minProducts ? 'bg-green-500' : 'bg-primary'}`}
+                                style={{ width: `${Math.min((eligibility.currentProducts / eligibility.minProducts) * 100, 100)}%` }}
+                              />
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-2 italic">Upload at least 2 active products to the marketplace.</p>
+                          </div>
+
+                          {/* Reviews Requirement */}
+                          <div className="p-4 rounded-xl bg-white border shadow-sm">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-sm font-medium text-slate-600">Total Reviews</span>
+                              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${eligibility.currentReviews >= eligibility.minReviews ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                                {eligibility.currentReviews} / {eligibility.minReviews}
+                              </span>
+                            </div>
+                            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full transition-all ${eligibility.currentReviews >= eligibility.minReviews ? 'bg-green-500' : 'bg-primary'}`}
+                                style={{ width: `${Math.min((eligibility.currentReviews / eligibility.minReviews) * 100, 100)}%` }}
+                              />
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-2 italic">Receive at least 3 reviews from your learners or customers.</p>
+                          </div>
+                        </div>
+
+                        <div className="pt-4 flex justify-center">
+                          <Button
+                            size="lg"
+                            className="bg-primary hover:bg-primary/90 text-white px-8"
+                            disabled={!eligibility.isEligible || actionLoading === 'apply-verification'}
+                            onClick={handleApplyVerification}
+                          >
+                            {actionLoading === 'apply-verification' ? (
+                              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                            ) : (
+                              <BadgeCheck className="h-5 w-5 mr-2" />
+                            )}
+                            {eligibility.isEligible ? 'Apply for Verification' : 'Criteria Not Met'}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
           </motion.div>

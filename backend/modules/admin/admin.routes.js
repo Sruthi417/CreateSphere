@@ -8,6 +8,7 @@ import {
   approveCreatorVerification,
   rejectCreatorVerification,
   revokeCreatorVerification,
+  listVerifiedCreators,
   listPriorityReports,
   listReportedCreators,
   getReportDetails,
@@ -34,6 +35,7 @@ adminRouter.use(authMiddleware, requireRole("admin"));
 
 /* Creator verification */
 adminRouter.get("/creators/verification/pending", listCreatorsPendingVerification);
+adminRouter.get("/creators/verified", listVerifiedCreators);
 adminRouter.post("/creators/:creatorId/verify", approveCreatorVerification);
 adminRouter.post("/creators/:creatorId/reject", rejectCreatorVerification);
 adminRouter.post("/creators/:creatorId/revoke", revokeCreatorVerification);

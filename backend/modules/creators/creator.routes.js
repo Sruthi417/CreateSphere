@@ -12,7 +12,9 @@ import {
   deactivateCreatorProfile,
   reactivateCreatorProfile,
   listCreatorsByCategory,
-  searchCreators
+  searchCreators,
+  checkVerificationEligibility,
+  applyForVerification
 } from "./creator.controller.js";
 
 const creatorRoutes = Router();
@@ -63,6 +65,10 @@ creatorRoutes.put("/me/profile", authMiddleware, requireRole("creator"), updateC
 
 // Deactivate creator mode
 creatorRoutes.post("/me/deactivate", authMiddleware, requireRole("creator"), deactivateCreatorProfile);
+
+// Verification
+creatorRoutes.get("/me/verification/eligibility", authMiddleware, requireRole("creator"), checkVerificationEligibility);
+creatorRoutes.post("/me/verification/apply", authMiddleware, requireRole("creator"), applyForVerification);
 
 // Reactivate creator mode
 creatorRoutes.post("/me/reactivate", authMiddleware, reactivateCreatorProfile);

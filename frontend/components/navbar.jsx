@@ -65,46 +65,51 @@ export default function Navbar() {
     { href: '/explore/creators', label: 'Creators' },
   ];
 
+  const isAdmin = userRole === 'admin';
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <nav className="container flex h-16 items-center justify-between px-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-2">
+        <Link href={isAdmin ? "/admin/dashboard" : "/"} className="flex items-center space-x-2">
           <Palette className="h-6 w-6 text-primary" />
-          <span className="font-bold text-xl">CraftSphere</span>
+          <span className="font-bold text-xl">CraftSphere <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded ml-1">{isAdmin ? 'ADMIN' : ''}</span></span>
         </Link>
 
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center space-x-6">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`text-sm font-medium transition-colors hover:text-primary ${pathname === link.href ? 'text-primary' : 'text-muted-foreground'
-                }`}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </div>
+        {/* Desktop Navigation - Hidden for Admin */}
+        {!isAdmin && (
+          <div className="hidden md:flex items-center space-x-6">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`text-sm font-medium transition-colors hover:text-primary ${pathname === link.href ? 'text-primary' : 'text-muted-foreground'}`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        )}
 
-        {/* Search Bar */}
-        <div className="hidden md:flex relative max-w-sm flex-1 mx-6">
-          {mounted ? (
-            <form onSubmit={handleSearch} className="w-full relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search products, tutorials..."
-                className="pl-10 w-full"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </form>
-          ) : (
-            <div className="h-10 w-full bg-muted animate-pulse rounded-md" />
-          )}
-        </div>
+        {/* Search Bar - Hidden for Admin */}
+        {!isAdmin && (
+          <div className="hidden md:flex relative max-w-sm flex-1 mx-6">
+            {mounted ? (
+              <form onSubmit={handleSearch} className="w-full relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search products, tutorials..."
+                  className="pl-10 w-full"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </form>
+            ) : (
+              <div className="h-10 w-full bg-muted animate-pulse rounded-md" />
+            )}
+          </div>
+        )}
 
         {/* Right Section */}
         <div className="flex items-center space-x-4">
@@ -122,16 +127,21 @@ export default function Navbar() {
 
               {isAuthenticated ? (
                 <>
-                  <Link href="/user/favorites" className="hidden md:block">
-                    <Button variant="ghost" size="icon">
-                      <Heart className="h-5 w-5" />
-                    </Button>
-                  </Link>
-                  <Link href="/chat" className="hidden md:block">
-                    <Button variant="ghost" size="icon">
-                      <MessageCircle className="h-5 w-5" />
-                    </Button>
-                  </Link>
+                  {/* User Icons - Hidden for Admin */}
+                  {!isAdmin && (
+                    <>
+                      <Link href="/user/favorites" className="hidden md:block">
+                        <Button variant="ghost" size="icon">
+                          <Heart className="h-5 w-5" />
+                        </Button>
+                      </Link>
+                      <Link href="/chat" className="hidden md:block">
+                        <Button variant="ghost" size="icon">
+                          <MessageCircle className="h-5 w-5" />
+                        </Button>
+                      </Link>
+                    </>
+                  )}
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -147,72 +157,60 @@ export default function Navbar() {
                         <div className="flex flex-col space-y-1 leading-none">
                           <p className="font-medium">{user?.name}</p>
                           <p className="text-xs text-muted-foreground">{user?.email}</p>
+                          {isAdmin && <Badge className="w-fit text-[8px] h-3 px-1">ADMINISTRATOR</Badge>}
                         </div>
                       </div>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link href="/user/profile" className="cursor-pointer">
-                          <User className="mr-2 h-4 w-4" />
-                          Profile
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href="/user/favorites" className="cursor-pointer">
-                          <Heart className="mr-2 h-4 w-4" />
-                          Favorites
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href="/chat" className="cursor-pointer">
-                          <MessageCircle className="mr-2 h-4 w-4" />
-                          Messages
-                        </Link>
-                      </DropdownMenuItem>
-                      {(userRole === 'creator' || user?.onboardingStatus === 'creator_completed') && (
+
+                      {isAdmin ? (
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin/dashboard" className="cursor-pointer">
+                            <ShieldCheck className="mr-2 h-4 w-4" />
+                            Admin Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                      ) : (
                         <>
+                          <DropdownMenuItem asChild>
+                            <Link href="/user/profile" className="cursor-pointer">
+                              <User className="mr-2 h-4 w-4" />
+                              Profile
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/user/favorites" className="cursor-pointer">
+                              <Heart className="mr-2 h-4 w-4" />
+                              Favorites
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/chat" className="cursor-pointer">
+                              <MessageCircle className="mr-2 h-4 w-4" />
+                              Messages
+                            </Link>
+                          </DropdownMenuItem>
+
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem asChild>
-                            <Link href="/creator/dashboard" className="cursor-pointer">
-                              <LayoutDashboard className="mr-2 h-4 w-4" />
-                              Creator Dashboard
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href="/product/create" className="cursor-pointer">
-                              <Package className="mr-2 h-4 w-4" />
-                              New Product
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href="/tutorial/create" className="cursor-pointer">
-                              <BookOpen className="mr-2 h-4 w-4" />
-                              New Tutorial
-                            </Link>
-                          </DropdownMenuItem>
+                          {userRole === 'creator' ? (
+                            <>
+                              <DropdownMenuItem asChild>
+                                <Link href="/creator/dashboard" className="cursor-pointer text-primary font-semibold">
+                                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                                  Creator Dashboard
+                                </Link>
+                              </DropdownMenuItem>
+                            </>
+                          ) : (
+                            <DropdownMenuItem asChild>
+                              <Link href="/creator/onboarding" className="cursor-pointer text-primary">
+                                <Palette className="mr-2 h-4 w-4" />
+                                Become a Creator
+                              </Link>
+                            </DropdownMenuItem>
+                          )}
                         </>
                       )}
-                      {userRole !== 'creator' && user?.onboardingStatus !== 'creator_completed' && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem asChild>
-                            <Link href="/creator/onboarding" className="cursor-pointer">
-                              <Palette className="mr-2 h-4 w-4" />
-                              Become a Creator
-                            </Link>
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                      {userRole === 'admin' && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem asChild>
-                            <Link href="/admin/dashboard" className="cursor-pointer">
-                              <ShieldCheck className="mr-2 h-4 w-4" />
-                              Admin Dashboard
-                            </Link>
-                          </DropdownMenuItem>
-                        </>
-                      )}
+
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
                         <LogOut className="mr-2 h-4 w-4" />
@@ -257,29 +255,44 @@ export default function Navbar() {
             className="md:hidden border-t bg-background"
           >
             <div className="container py-4 px-4 space-y-4">
-              <form onSubmit={handleSearch} className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search..."
-                  className="pl-10 w-full"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </form>
+              {!isAdmin && (
+                <>
+                  <form onSubmit={handleSearch} className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      type="search"
+                      placeholder="Search..."
+                      className="pl-10 w-full"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </form>
 
-              <div className="space-y-2">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="block py-2 text-sm font-medium"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
+                  <div className="space-y-2">
+                    {navLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        className="block py-2 text-sm font-medium"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {isAdmin && (
+                <Link
+                  href="/admin/dashboard"
+                  className="block py-2 text-sm font-bold text-primary"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <ShieldCheck className="h-4 w-4 inline mr-2" />
+                  Admin Dashboard
+                </Link>
+              )}
 
               {!isAuthenticated && (
                 <div className="flex space-x-2 pt-2 border-t">
@@ -300,5 +313,14 @@ export default function Navbar() {
         )}
       </AnimatePresence>
     </header>
+  );
+}
+
+// Minimal Badge for the Admin label in dropdown
+function Badge({ children, className }) {
+  return (
+    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80 ${className}`}>
+      {children}
+    </span>
   );
 }

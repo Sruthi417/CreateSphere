@@ -450,6 +450,7 @@ export default function ProductDetailPage() {
         onOpenChange={setReportOpen}
         targetId={productId}
         targetType="product"
+        targetName={product?.title}
       />
     </div>
   );

@@ -51,6 +51,8 @@ export default function TutorialDetailPage() {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [editingReview, setEditingReview] = useState(null);
   const [expandedLessons, setExpandedLessons] = useState([0]); // Default first lesson expanded
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [enrollLoading, setEnrollLoading] = useState(false);
 
   useEffect(() => {
     fetchTutorial();
@@ -60,7 +62,9 @@ export default function TutorialDetailPage() {
   const fetchTutorial = async () => {
     try {
       const response = await tutorialAPI.getById(tutorialId);
-      setTutorial(response.data.data);
+      const data = response.data.data;
+      setTutorial(data);
+      setIsEnrolled(data.isEnrolled || false);
     } catch (error) {
       toast.error('Failed to load tutorial');
       router.push('/explore/tutorials');
@@ -132,6 +136,28 @@ export default function TutorialDetailPage() {
       fetchTutorial();
     } catch (error) {
       toast.error('Failed to delete review');
+    }
+  };
+
+  const handleEnroll = async () => {
+    if (!isAuthenticated) {
+      toast.error('Please login to enroll in this course');
+      router.push('/auth/login');
+      return;
+    }
+
+    if (isEnrolled) return;
+
+    setEnrollLoading(true);
+    try {
+      await tutorialAPI.enroll(tutorialId);
+      setIsEnrolled(true);
+      toast.success('Successfully enrolled in the course!');
+      fetchTutorial(); // Refresh to get updated learner count
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to enroll');
+    } finally {
+      setEnrollLoading(false);
     }
   };
 
@@ -422,14 +448,22 @@ export default function TutorialDetailPage() {
                       ))}
                     </ul>
 
-                    <Button className="w-full py-7 rounded-2xl text-lg font-bold shadow-lg shadow-primary/20">
-                      Enroll This Course
-                    </Button>
-
-                    <div className="flex justify-center">
-                      <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-primary" onClick={() => setReportOpen(true)}>
-                        <Flag className="h-3 w-3 mr-1.5" />
-                        Report this course
+                    <div className="flex gap-2">
+                      <Button
+                        className="flex-1 py-7 rounded-2xl text-lg font-bold shadow-lg shadow-primary/20"
+                        onClick={handleEnroll}
+                        disabled={enrollLoading || isEnrolled}
+                      >
+                        {enrollLoading ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : isEnrolled ? <CheckCircle2 className="h-5 w-5 mr-2" /> : null}
+                        {isEnrolled ? 'Enrolled' : 'Enroll This Course'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-auto w-16 rounded-2xl border-muted-foreground/20 hover:bg-destructive/5 hover:text-destructive hover:border-destructive/20"
+                        onClick={() => setReportOpen(true)}
+                      >
+                        <Flag className="h-5 w-5" />
                       </Button>
                     </div>
                   </div>
@@ -462,6 +496,7 @@ export default function TutorialDetailPage() {
         onOpenChange={setReportOpen}
         targetId={tutorialId}
         targetType="tutorial"
+        targetName={tutorial?.title}
       />
     </div>
   );

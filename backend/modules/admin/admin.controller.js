@@ -12,8 +12,6 @@ import {
   notifyUser
 } from "../../utils/moderation.utils.js";
 
-import { computeCreatorPriorityScore } from "../../utils/priorityScore.js";
-
 
 /* =========================================================
    ADMIN LOGIN
@@ -71,31 +69,39 @@ export const listCreatorsPendingVerification = async (req, res) => {
       role: "creator",
       "creatorProfile.verificationStatus": "requested",
       "creatorProfile.isDeactivated": false
-    }).lean();
-
-    const ranked = [];
-
-    for (const c of creators) {
-      ranked.push({
-        ...c,
-        priorityScore: await computeCreatorPriorityScore(c)
-      });
-    }
-
-    ranked.sort((a, b) => b.priorityScore - a.priorityScore);
+    }).select("name email avatarUrl creatorProfile createdAt").lean();
 
     return res.status(200).json({
       success: true,
-      count: ranked.length,
-      data: ranked
+      count: creators.length,
+      data: creators
     });
 
-  } catch {
-    console.error("creator verification  error:", err);
+  } catch (error) {
+    console.error("verification queue error:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to load verification queue"
     });
+  }
+};
+
+/* LIST ALL VERIFIED CREATORS */
+export const listVerifiedCreators = async (req, res) => {
+  try {
+    const creators = await User.find({
+      role: "creator",
+      "creatorProfile.verified": true,
+      "creatorProfile.isDeactivated": false
+    }).select("name email avatarUrl creatorProfile verifiedAt").lean();
+
+    return res.status(200).json({
+      success: true,
+      count: creators.length,
+      data: creators
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Failed to load verified creators" });
   }
 };
 
@@ -115,11 +121,11 @@ export const approveCreatorVerification = async (req, res) => {
 
     await notifyUser(creatorId, "🎉 Your creator profile is verified!");
 
-    return res.status(200).json({ success: true });
+    return res.status(200).json({ success: true, message: "Creator verified successfully" });
 
-  } catch {
-    console.error("approve verification error:", err);
-    return res.status(500).json({ success: false });
+  } catch (error) {
+    console.error("approve verification error:", error);
+    return res.status(500).json({ success: false, message: "Failed to approve verification" });
   }
 };
 
@@ -140,34 +146,35 @@ export const rejectCreatorVerification = async (req, res) => {
 
     await notifyUser(creatorId, "⚠ Verification rejected — " + reason);
 
-    return res.status(200).json({ success: true });
+    return res.status(200).json({ success: true, message: "Verification request rejected" });
 
-  } catch {
-    console.error("reject verification error:", err);
-    return res.status(500).json({ success: false });
+  } catch (error) {
+    console.error("reject verification error:", error);
+    return res.status(500).json({ success: false, message: "Failed to reject verification" });
   }
 };
 
 
-/* REVOKE */
+/* REVOKE / REMOVE VERIFICATION */
 export const revokeCreatorVerification = async (req, res) => {
   try {
     const { creatorId } = req.params;
 
     const creator = await User.findById(creatorId);
+    if (!creator) return res.status(404).json({ success: false, message: "Creator not found" });
 
     creator.creatorProfile.verified = false;
     creator.creatorProfile.verificationStatus = "revoked";
 
     await creator.save();
 
-    await notifyUser(creatorId, " Verification revoked due to misconduct");
+    await notifyUser(creatorId, "⚠ Your verification has been removed by an admin. You can re-apply once you meet the criteria again.");
 
-    return res.status(200).json({ success: true });
+    return res.status(200).json({ success: true, message: "Verification removed" });
 
-  } catch {
-    console.error("revoke verification error:", err);
-    return res.status(500).json({ success: false });
+  } catch (error) {
+    console.error("revoke verification error:", error);
+    return res.status(500).json({ success: false, message: "Failed to remove verification" });
   }
 };
 

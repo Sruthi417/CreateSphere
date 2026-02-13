@@ -1,5 +1,6 @@
 import Product from "./product.model.js";
 import User from "../users/user.model.js";
+import { checkAndAutoVerify } from "../../utils/verification.utils.js";
 
 
 /* =========================================================
@@ -28,6 +29,9 @@ export const createProduct = async (req, res) => {
     // attach to creator profile
     creator.creatorProfile.products.push(product._id);
     await creator.save();
+
+    // Trigger auto-verification check
+    await checkAndAutoVerify(creatorId);
 
     return res.status(201).json({
       success: true,

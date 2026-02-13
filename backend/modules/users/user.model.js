@@ -13,13 +13,13 @@ const CreatorProfileSchema = new Schema(
 
     portfolio: [{ type: String }],
 
-   moderation: {
-    reason: { type: String, default: null },
-    hiddenUntil: { type: Date, default: null },
-    strikeCount: { type: Number, default: 0 }
-  },
+    moderation: {
+      reason: { type: String, default: null },
+      hiddenUntil: { type: Date, default: null },
+      strikeCount: { type: Number, default: 0 }
+    },
 
-  
+
     categories: [
       { type: Schema.Types.ObjectId, ref: "Category" }
     ],
@@ -48,7 +48,7 @@ const CreatorProfileSchema = new Schema(
 
     verificationStatus: {
       type: String,
-      enum: ["none", "requested", "reviewing", "verified", "rejected"],
+      enum: ["none", "requested", "reviewing", "verified", "rejected", "revoked"],
       default: "none",
       index: true
     },
@@ -130,33 +130,33 @@ const UserSchema = new Schema(
       select: false, // never return password by default
     },
     emailVerified: {
-    type: Boolean,
-    default: false,
-    index: true,
+      type: Boolean,
+      default: false,
+      index: true,
     },
 
     emailVerificationToken: {
-    type: String,
-    default: null,
-    select: false,
+      type: String,
+      default: null,
+      select: false,
     },
 
     emailVerificationExpires: {
-    type: Date,
-    default: null,
-    select: false,
+      type: Date,
+      default: null,
+      select: false,
     },
 
     passwordResetToken: {
-    type: String,
-    default: null,
-    select: false,
+      type: String,
+      default: null,
+      select: false,
     },
 
     passwordResetExpires: {
-    type: Date,
-    default: null,
-    select: false,
+      type: Date,
+      default: null,
+      select: false,
     },
 
 
@@ -183,19 +183,23 @@ const UserSchema = new Schema(
       default: false,
     },
 
-   moderation: {
-  status: { type: String, default: "active" },
-  strikeCount: { type: Number, default: 0 },
-  suspendedUntil: { type: Date, default: null },
-  lastAction: { type: String, default: null },
-  lastReason: { type: String, default: null }
-},
+    moderation: {
+      status: { type: String, default: "active" },
+      strikeCount: { type: Number, default: 0 },
+      suspendedUntil: { type: Date, default: null },
+      lastAction: { type: String, default: null },
+      lastReason: { type: String, default: null }
+    },
 
 
 
 
     favoriteProducts: [
       { type: Schema.Types.ObjectId, ref: "Product" }
+    ],
+
+    enrolledTutorials: [
+      { type: Schema.Types.ObjectId, ref: "Tutorial" }
     ],
 
     following: [

@@ -2,6 +2,7 @@ import Review from "./review.model.js";
 import Product from "../products/product.model.js";
 import Tutorial from "../tutorials/tutorial.model.js";
 import { updateTargetReviewStats } from "../../utils/review.utils.js";
+import { checkAndAutoVerify } from "../../utils/verification.utils.js";
 
 
 
@@ -38,6 +39,11 @@ export const createReview = async (req, res) => {
 
 
     await updateTargetReviewStats(targetId, targetType);
+
+    // Trigger auto-verification check for the creator
+    if (item.creatorId) {
+      await checkAndAutoVerify(item.creatorId);
+    }
 
     return res.status(201).json({
       success: true,

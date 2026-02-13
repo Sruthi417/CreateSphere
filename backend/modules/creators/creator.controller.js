@@ -1,4 +1,6 @@
 import User from "../users/user.model.js";
+import Product from "../products/product.model.js";
+import Review from "../reviews/review.model.js";
 
 /* =========================================================
    START CREATOR ONBOARDING (user → creator_pending)
@@ -148,10 +150,10 @@ export const listCreators = async (req, res) => {
 
     // Add isFollowing for logged-in users
     const creatorsWithFollowStatus = creators.map(creator => {
-      const isFollowing = req.user ? 
-        creator.creatorProfile.followers.some(id => id.toString() === req.user.id.toString()) : 
+      const isFollowing = req.user ?
+        creator.creatorProfile.followers.some(id => id.toString() === req.user.id.toString()) :
         false;
-      
+
       return {
         ...creator,
         isFollowing,
@@ -193,7 +195,7 @@ export const getCreatorPublicProfile = async (req, res) => {
     const creator = await User.findOne({
       _id: creatorId,
       role: "creator",
-     
+
       "creatorProfile.isDeactivated": false
     }).select(
       "_id name avatarUrl creatorProfile.displayName creatorProfile.tagline creatorProfile.fullBio creatorProfile.portfolio creatorProfile.categories creatorProfile.rating creatorProfile.followersCount creatorProfile.followers"
@@ -206,8 +208,8 @@ export const getCreatorPublicProfile = async (req, res) => {
       });
 
     // Compute isFollowing for logged-in user
-    const isFollowing = req.user ? 
-      creator.creatorProfile.followers.some(id => id.toString() === req.user.id.toString()) : 
+    const isFollowing = req.user ?
+      creator.creatorProfile.followers.some(id => id.toString() === req.user.id.toString()) :
       false;
 
     // Build response with followers array removed for security
@@ -372,10 +374,10 @@ export const listCreatorsByCategory = async (req, res) => {
 
     // Add isFollowing for logged-in users
     const creatorsWithFollowStatus = creators.map(creator => {
-      const isFollowing = req.user ? 
-        creator.creatorProfile.followers.some(id => id.toString() === req.user.id.toString()) : 
+      const isFollowing = req.user ?
+        creator.creatorProfile.followers.some(id => id.toString() === req.user.id.toString()) :
         false;
-      
+
       return {
         ...creator,
         isFollowing,
@@ -442,10 +444,10 @@ export const searchCreators = async (req, res) => {
 
     // Add isFollowing for logged-in users
     const resultsWithFollowStatus = results.map(creator => {
-      const isFollowing = req.user ? 
-        creator.creatorProfile.followers.some(id => id.toString() === req.user.id.toString()) : 
+      const isFollowing = req.user ?
+        creator.creatorProfile.followers.some(id => id.toString() === req.user.id.toString()) :
         false;
-      
+
       return {
         ...creator,
         isFollowing,
@@ -469,5 +471,86 @@ export const searchCreators = async (req, res) => {
       success: false,
       message: "Creator search failed"
     });
+  }
+};
+
+/* =========================================================
+   CHECK VERIFICATION ELIGIBILITY
+========================================================= */
+export const checkVerificationEligibility = async (req, res) => {
+  try {
+    const creatorId = req.user.id;
+
+    // Count products
+    const productCount = await Product.countDocuments({
+      creatorId,
+      status: 'active'
+    });
+
+    // Count reviews across all content
+    const reviewCount = await Review.countDocuments({
+      creatorId
+    });
+
+    const criteria = {
+      minProducts: 2,
+      minReviews: 3,
+      currentProducts: productCount,
+      currentReviews: reviewCount,
+      isEligible: productCount >= 2 && reviewCount >= 3
+    };
+
+    return res.status(200).json({
+      success: true,
+      data: criteria
+    });
+
+  } catch (error) {
+    console.error("eligibility check error:", error);
+    return res.status(500).json({ success: false, message: "Failed to check eligibility" });
+  }
+};
+
+/* =========================================================
+   APPLY FOR VERIFICATION
+========================================================= */
+export const applyForVerification = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user || user.role !== 'creator') {
+      return res.status(403).json({ success: false, message: "Only creators can apply" });
+    }
+
+    if (user.creatorProfile.verified) {
+      return res.status(400).json({ success: false, message: "You are already verified" });
+    }
+
+    if (user.creatorProfile.verificationStatus === 'requested') {
+      return res.status(400).json({ success: false, message: "Verification already requested" });
+    }
+
+    // Eligibility check
+    const productCount = await Product.countDocuments({ creatorId: user._id, status: 'active' });
+    const reviewCount = await Review.countDocuments({ creatorId: user._id });
+
+    if (productCount < 2 || reviewCount < 3) {
+      return res.status(400).json({
+        success: false,
+        message: "You do not meet the eligibility criteria (2 products, 3 reviews)"
+      });
+    }
+
+    user.creatorProfile.verificationStatus = "requested";
+    user.creatorProfile.verificationRequestedAt = new Date();
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Verification request submitted successfully"
+    });
+
+  } catch (error) {
+    console.error("apply verification error:", error);
+    return res.status(500).json({ success: false, message: "Failed to submit request" });
   }
 };

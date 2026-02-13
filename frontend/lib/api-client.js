@@ -42,6 +42,8 @@ export const creatorAPI = {
   updateProfile: (data) => axiosInstance.put('/creators/me/profile', data),
   deactivate: () => axiosInstance.post('/creators/me/deactivate'),
   reactivate: () => axiosInstance.post('/creators/me/reactivate'),
+  checkVerificationEligibility: () => axiosInstance.get('/creators/me/verification/eligibility'),
+  applyForVerification: () => axiosInstance.post('/creators/me/verification/apply'),
 };
 
 // Product API
@@ -76,6 +78,7 @@ export const tutorialAPI = {
   uploadThumbnail: (formData) => axiosInstance.post('/tutorials/thumbnail/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
+  enroll: (tutorialId) => axiosInstance.post(`/tutorials/${tutorialId}/enroll`),
 };
 
 // Category API
@@ -127,6 +130,7 @@ export const chatbotAPI = {
 export const adminAPI = {
   login: (data) => axiosInstance.post('/admin/login', data),
   getPendingVerifications: () => axiosInstance.get('/admin/creators/verification/pending'),
+  getVerifiedCreators: () => axiosInstance.get('/admin/creators/verified'),
   verifyCreator: (creatorId) => axiosInstance.post(`/admin/creators/${creatorId}/verify`),
   rejectCreator: (creatorId, reason) => axiosInstance.post(`/admin/creators/${creatorId}/reject`, { reason }),
   revokeCreator: (creatorId) => axiosInstance.post(`/admin/creators/${creatorId}/revoke`),

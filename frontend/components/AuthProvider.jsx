@@ -24,41 +24,47 @@ export default function AuthProvider({ children }) {
       // Check if running in browser
       if (typeof window === 'undefined') return;
 
-      // Try to get token from localStorage
-      const storedToken = localStorage.getItem('authToken');
-      
+      // Try to get tokens from localStorage
+      const adminToken = localStorage.getItem('adminToken');
+      const authToken = localStorage.getItem('authToken');
+      const storedToken = adminToken || authToken;
+
       // If no token stored, nothing to restore
       if (!storedToken) {
         return;
       }
 
       try {
-        // Token exists but auth state might not be hydrated yet
-        // Set the token to restore basic auth state
-        setAuthToken(storedToken);
+        // Set correctly based on which token we found
+        if (adminToken) {
+          useAuthStore.getState().setAdminToken(adminToken);
+        } else {
+          setAuthToken(storedToken);
+        }
 
         // Try to fetch current user profile
         // This validates the token and gets fresh user data
         const profileResponse = await userAPI.getProfile();
-        
+
         if (profileResponse.data?.data) {
           const user = profileResponse.data.data;
-          
+
           // Restore full user state
           setUser(user);
           setUserRole(user.role);
-          
+
           if (user.creatorProfile) {
             setCreatorProfile(user.creatorProfile);
           }
         }
       } catch (error) {
         // Token might be expired or invalid
-        // Clear invalid token
+        // Clear invalid tokens
         console.log('Auth restoration failed:', error.message);
         localStorage.removeItem('authToken');
+        localStorage.removeItem('adminToken');
         localStorage.removeItem('userRole');
-        
+
         // Reset auth state
         setAuthToken(null);
       }

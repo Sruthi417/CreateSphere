@@ -13,7 +13,8 @@ import {
   updateTutorial,
   removeTutorial,
   restoreTutorial,
-  searchTutorials
+  searchTutorials,
+  enrollTutorial
 } from "./tutorial.controller.js";
 
 const tutorialRouter = Router();
@@ -102,5 +103,8 @@ tutorialRouter.post(
 //
 
 tutorialRouter.get("/:tutorialId", getTutorial);
+
+// Enroll in tutorial
+tutorialRouter.post("/:tutorialId/enroll", authMiddleware, enrollTutorial);
 
 export default tutorialRouter;

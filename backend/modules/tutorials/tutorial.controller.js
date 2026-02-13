@@ -63,9 +63,16 @@ export const getTutorial = async (req, res) => {
       });
     }
 
+    const isEnrolled = req.user
+      ? await User.exists({ _id: req.user.id, enrolledTutorials: tutorial._id })
+      : false;
+
     return res.status(200).json({
       success: true,
-      data: tutorial,
+      data: {
+        ...tutorial.toObject(),
+        isEnrolled
+      },
     });
 
   } catch (error) {
@@ -424,5 +431,51 @@ export const searchTutorials = async (req, res) => {
       success: false,
       message: "Search failed",
     });
+  }
+};
+
+
+/* =========================================================
+   ENROLL IN TUTORIAL
+========================================================= */
+export const enrollTutorial = async (req, res) => {
+  try {
+    const { tutorialId } = req.params;
+    const userId = req.user.id;
+
+    const tutorial = await Tutorial.findById(tutorialId);
+    if (!tutorial) {
+      return res.status(404).json({ success: false, message: "Tutorial not found" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (user.enrolledTutorials.includes(tutorialId)) {
+      return res.status(200).json({
+        success: true,
+        message: "Already enrolled",
+        data: { isEnrolled: true }
+      });
+    }
+
+    user.enrolledTutorials.push(tutorialId);
+    await user.save();
+
+    // Increment learners count (using reviewsCount as proxy or adding learners field)
+    tutorial.reviewsCount = (tutorial.reviewsCount || 0) + 1;
+    await tutorial.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Enrolled successfully",
+      data: { isEnrolled: true }
+    });
+
+  } catch (error) {
+    console.error("enroll error:", error);
+    return res.status(500).json({ success: false, message: "Failed to enroll" });
   }
 };
