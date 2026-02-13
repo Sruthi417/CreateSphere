@@ -64,8 +64,6 @@ export default function Navbar() {
     { href: '/explore/creators', label: 'Creators' },
   ];
 
-  if (!mounted) return null;
-
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <nav className="container flex h-16 items-center justify-between px-4">
@@ -81,9 +79,8 @@ export default function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                pathname === link.href ? 'text-primary' : 'text-muted-foreground'
-              }`}
+              className={`text-sm font-medium transition-colors hover:text-primary ${pathname === link.href ? 'text-primary' : 'text-muted-foreground'
+                }`}
             >
               {link.label}
             </Link>
@@ -91,146 +88,153 @@ export default function Navbar() {
         </div>
 
         {/* Search Bar */}
-        <form onSubmit={handleSearch} className="hidden md:flex relative max-w-sm flex-1 mx-6">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search products, tutorials..."
-            className="pl-10 w-full"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </form>
+        <div className="hidden md:flex relative max-w-sm flex-1 mx-6">
+          {mounted ? (
+            <form onSubmit={handleSearch} className="w-full relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search products, tutorials..."
+                className="pl-10 w-full"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </form>
+          ) : (
+            <div className="h-10 w-full bg-muted animate-pulse rounded-md" />
+          )}
+        </div>
 
         {/* Right Section */}
         <div className="flex items-center space-x-4">
-          {/* Dark Mode Toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleDarkMode}
-            className="hidden md:flex"
-          >
-            {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </Button>
-
-          {isAuthenticated ? (
+          {mounted ? (
             <>
-              {/* Favorites */}
-              <Link href="/user/favorites">
-                <Button variant="ghost" size="icon" className="hidden md:flex">
-                  <Heart className="h-5 w-5" />
-                </Button>
-              </Link>
+              {/* Dark Mode Toggle */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleDarkMode}
+                className="hidden md:flex"
+              >
+                {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </Button>
 
-              {/* Messages */}
-              <Link href="/chat">
-                <Button variant="ghost" size="icon" className="hidden md:flex">
-                  <MessageCircle className="h-5 w-5" />
-                </Button>
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link href="/user/favorites" className="hidden md:block">
+                    <Button variant="ghost" size="icon">
+                      <Heart className="h-5 w-5" />
+                    </Button>
+                  </Link>
+                  <Link href="/chat" className="hidden md:block">
+                    <Button variant="ghost" size="icon">
+                      <MessageCircle className="h-5 w-5" />
+                    </Button>
+                  </Link>
 
-              {/* User Menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={user?.avatarUrl} alt={user?.name} />
-                      <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <div className="flex items-center justify-start gap-2 p-2">
-                    <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium">{user?.name}</p>
-                      <p className="text-xs text-muted-foreground">{user?.email}</p>
-                    </div>
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/user/profile" className="cursor-pointer">
-                      <User className="mr-2 h-4 w-4" />
-                      Profile
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/user/favorites" className="cursor-pointer">
-                      <Heart className="mr-2 h-4 w-4" />
-                      Favorites
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/chat" className="cursor-pointer">
-                      <MessageCircle className="mr-2 h-4 w-4" />
-                      Messages
-                    </Link>
-                  </DropdownMenuItem>
-                  {(userRole === 'creator' || user?.onboardingStatus === 'creator_completed') && (
-                    <>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={user?.avatarUrl} alt={user?.name} />
+                          <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>
+                        </Avatar>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56" align="end" forceMount>
+                      <div className="flex items-center justify-start gap-2 p-2">
+                        <div className="flex flex-col space-y-1 leading-none">
+                          <p className="font-medium">{user?.name}</p>
+                          <p className="text-xs text-muted-foreground">{user?.email}</p>
+                        </div>
+                      </div>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
-                        <Link href="/creator/dashboard" className="cursor-pointer">
-                          <LayoutDashboard className="mr-2 h-4 w-4" />
-                          Creator Dashboard
+                        <Link href="/user/profile" className="cursor-pointer">
+                          <User className="mr-2 h-4 w-4" />
+                          Profile
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link href="/product/create" className="cursor-pointer">
-                          <Package className="mr-2 h-4 w-4" />
-                          New Product
+                        <Link href="/user/favorites" className="cursor-pointer">
+                          <Heart className="mr-2 h-4 w-4" />
+                          Favorites
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link href="/tutorial/create" className="cursor-pointer">
-                          <BookOpen className="mr-2 h-4 w-4" />
-                          New Tutorial
+                        <Link href="/chat" className="cursor-pointer">
+                          <MessageCircle className="mr-2 h-4 w-4" />
+                          Messages
                         </Link>
                       </DropdownMenuItem>
-                    </>
-                  )}
-                  {userRole !== 'creator' && user?.onboardingStatus !== 'creator_completed' && (
-                    <>
+                      {(userRole === 'creator' || user?.onboardingStatus === 'creator_completed') && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem asChild>
+                            <Link href="/creator/dashboard" className="cursor-pointer">
+                              <LayoutDashboard className="mr-2 h-4 w-4" />
+                              Creator Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/product/create" className="cursor-pointer">
+                              <Package className="mr-2 h-4 w-4" />
+                              New Product
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/tutorial/create" className="cursor-pointer">
+                              <BookOpen className="mr-2 h-4 w-4" />
+                              New Tutorial
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      {userRole !== 'creator' && user?.onboardingStatus !== 'creator_completed' && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem asChild>
+                            <Link href="/creator/onboarding" className="cursor-pointer">
+                              <Palette className="mr-2 h-4 w-4" />
+                              Become a Creator
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      {userRole === 'admin' && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/dashboard" className="cursor-pointer">
+                              <ShieldCheck className="mr-2 h-4 w-4" />
+                              Admin Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link href="/creator/onboarding" className="cursor-pointer">
-                          <Palette className="mr-2 h-4 w-4" />
-                          Become a Creator
-                        </Link>
+                      <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Log out
                       </DropdownMenuItem>
-                    </>
-                  )}
-                  {userRole === 'admin' && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link href="/admin/dashboard" className="cursor-pointer">
-                          <ShieldCheck className="mr-2 h-4 w-4" />
-                          Admin Dashboard
-                        </Link>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Log out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              ) : (
+                <div className="hidden md:flex items-center space-x-2">
+                  <Link href="/auth/login">
+                    <Button variant="ghost">Log in</Button>
+                  </Link>
+                  <Link href="/auth/signup">
+                    <Button>Sign up</Button>
+                  </Link>
+                </div>
+              )}
             </>
           ) : (
-            <div className="hidden md:flex items-center space-x-2">
-              <Link href="/auth/login">
-                <Button variant="ghost">Log in</Button>
-              </Link>
-              <Link href="/auth/signup">
-                <Button>Sign up</Button>
-              </Link>
-            </div>
+            <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
           )}
 
-          {/* Mobile Menu Button */}
           <Button
             variant="ghost"
             size="icon"
@@ -252,7 +256,6 @@ export default function Navbar() {
             className="md:hidden border-t bg-background"
           >
             <div className="container py-4 px-4 space-y-4">
-              {/* Mobile Search */}
               <form onSubmit={handleSearch} className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -264,7 +267,6 @@ export default function Navbar() {
                 />
               </form>
 
-              {/* Mobile Nav Links */}
               <div className="space-y-2">
                 {navLinks.map((link) => (
                   <Link
@@ -278,7 +280,6 @@ export default function Navbar() {
                 ))}
               </div>
 
-              {/* Mobile Auth Buttons */}
               {!isAuthenticated && (
                 <div className="flex space-x-2 pt-2 border-t">
                   <Link href="/auth/login" className="flex-1">

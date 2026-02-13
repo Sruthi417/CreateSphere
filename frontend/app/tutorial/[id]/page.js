@@ -196,7 +196,7 @@ export default function TutorialDetailPage({ params }) {
               <div className="flex items-center gap-4">
                 <StarRating rating={tutorial.averageRating || 0} />
                 <span className="text-sm text-muted-foreground">
-                  ({tutorial.reviewsCount || 0} reviews)
+                  {typeof tutorial.averageRating === 'number' ? tutorial.averageRating.toFixed(1) : '0.0'} ({tutorial.reviewsCount || 0} {tutorial.reviewsCount === 1 ? 'review' : 'reviews'})
                 </span>
               </div>
             </motion.div>

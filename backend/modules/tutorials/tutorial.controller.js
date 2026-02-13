@@ -52,7 +52,7 @@ export const getTutorial = async (req, res) => {
       _id: req.params.tutorialId,
       status: "active",
       visibility: "public",
-    });
+    }).populate("creatorId", "name avatarUrl creatorProfile");
 
     if (!tutorial) {
       return res.status(404).json({

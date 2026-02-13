@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Clock, BarChart2, PlayCircle, FileText, BookOpen } from 'lucide-react';
 import SmartImage from '@/components/ui/smart-image';
+import StarRating from '@/components/star-rating';
 
 export default function TutorialCard({ tutorial, index = 0 }) {
   const difficultyColors = {
@@ -66,6 +67,10 @@ export default function TutorialCard({ tutorial, index = 0 }) {
                 <BarChart2 className="h-3 w-3 mr-1" />
                 {tutorial.difficulty}
               </Badge>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <StarRating rating={tutorial.averageRating || 0} size="sm" />
+                <span>({tutorial.reviewsCount || 0})</span>
+              </div>
             </div>
           </CardContent>
         </Card>

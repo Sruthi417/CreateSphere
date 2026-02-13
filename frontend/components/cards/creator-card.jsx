@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Star, Users, CheckCircle2 } from 'lucide-react';
+import StarRating from '@/components/star-rating';
 import { useState } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import { userAPI } from '@/lib/api-client';
@@ -92,8 +93,8 @@ export default function CreatorCard({ creator, index = 0 }) {
                   <span>{followersCount}</span>
                 </div>
                 <div className="flex items-center gap-1 text-sm">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span>{profile.rating?.toFixed(1) || 'N/A'}</span>
+                  <StarRating rating={profile.rating || 0} size="sm" />
+                  <span className="font-medium">{profile.rating?.toFixed(1) || '0.0'}</span>
                 </div>
               </div>
               <Button

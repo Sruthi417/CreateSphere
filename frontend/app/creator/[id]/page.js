@@ -8,6 +8,7 @@ import Navbar from '@/components/navbar';
 import Footer from '@/components/footer';
 import ProductCard from '@/components/cards/product-card';
 import TutorialCard from '@/components/cards/tutorial-card';
+import StarRating from '@/components/star-rating';
 import { creatorAPI, productAPI, tutorialAPI, userAPI, chatAPI } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth-store';
 import { Button } from '@/components/ui/button';
@@ -207,8 +208,8 @@ export default function CreatorProfilePage({ params }) {
                     <span className="text-muted-foreground">Followers</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                    <span className="font-semibold">{profile.rating?.toFixed(1) || 'N/A'}</span>
+                    <StarRating rating={profile.rating || 0} size="sm" />
+                    <span className="font-semibold">{profile.rating?.toFixed(1) || '0.0'}</span>
                     <span className="text-muted-foreground">Rating</span>
                   </div>
                   <div className="flex items-center gap-1">

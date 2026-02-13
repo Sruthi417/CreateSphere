@@ -5,6 +5,7 @@ import User from "../users/user.model.js";
 import Product from "../products/product.model.js";
 import Tutorial from "../tutorials/tutorial.model.js";
 import Report from "../reports/report.model.js";
+import { JWT_SECRET } from "../../config/env.js";
 
 import {
   applyModerationAction,
@@ -33,18 +34,26 @@ export const adminLogin = async (req, res) => {
 
     const token = jwt.sign(
       { id: admin._id, role: "admin" },
-      process.env.JWT_SECRET,
+      JWT_SECRET || "default_secret",
       { expiresIn: "6h" }
     );
 
     return res.status(200).json({
       success: true,
       message: "Login successful",
-      token
+      data: {
+        token,
+        admin: {
+          _id: admin._id,
+          name: admin.name,
+          email: admin.email,
+          role: admin.role
+        }
+      }
     });
 
-  } catch {
-    console.error("login error:", err);
+  } catch (error) {
+    console.error("login error:", error);
     return res.status(500).json({
       success: false,
       message: "Admin login failed"
@@ -73,7 +82,7 @@ export const listCreatorsPendingVerification = async (req, res) => {
       });
     }
 
-    ranked.sort((a,b) => b.priorityScore - a.priorityScore);
+    ranked.sort((a, b) => b.priorityScore - a.priorityScore);
 
     return res.status(200).json({
       success: true,

@@ -49,6 +49,8 @@ export default function ProductDetailPage({ params }) {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [editingReview, setEditingReview] = useState(null);
 
+  console.log(product);
+
   useEffect(() => {
     fetchProduct();
     fetchReviews();
@@ -250,7 +252,7 @@ export default function ProductDetailPage({ params }) {
                   <div className="flex items-center gap-1">
                     <StarRating rating={product.averageRating || 0} />
                     <span className="text-sm text-muted-foreground">
-                      ({product.reviewsCount || 0} reviews)
+                      {typeof product.averageRating === 'number' ? product.averageRating.toFixed(1) : '0.0'} ({product.reviewsCount || 0} {product.reviewsCount === 1 ? 'review' : 'reviews'})
                     </span>
                   </div>
                   {product.estimatedPrice && (

@@ -18,7 +18,7 @@ const AvatarImage = React.forwardRef(({ className, src, ...props }, ref) => (
   <AvatarPrimitive.Image
     ref={ref}
     src={getImageUrl(src)}
-    className={cn("aspect-square h-full w-full", className)}
+    className={cn("aspect-square h-full w-full transition-opacity duration-300", className)}
     {...props} />
 ))
 AvatarImage.displayName = AvatarPrimitive.Image.displayName

@@ -4,12 +4,16 @@ import { PORT } from "./config/env.js";
 import app from "./app.js";
 import { connectToDatabase } from "./config/database.js";
 
+// ✅ import seeding utility
+import { seedAdmin } from "./utils/seed.js";
+
 // ✅ import cleanup worker
 import { startChatbotCleanupWorker } from "./utils/cleanup.js";
 
 const startServer = async () => {
   try {
     await connectToDatabase();
+    await seedAdmin();
 
     const port = PORT || 5500;
 

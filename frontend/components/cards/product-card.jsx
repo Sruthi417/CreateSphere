@@ -7,7 +7,8 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Heart, Star, ExternalLink } from 'lucide-react';
+import { Heart, ExternalLink } from 'lucide-react';
+import StarRating from '@/components/star-rating';
 import { useState } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import { userAPI } from '@/lib/api-client';
@@ -83,13 +84,15 @@ export default function ProductCard({ product, index = 0, isFavorited = false })
               {product.shortDescription || product.description}
             </p>
             <div className="flex items-center justify-between mt-3">
-              <div className="flex items-center space-x-1">
-                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                <span className="text-sm font-medium">
-                  {product.averageRating?.toFixed(1) || 'N/A'}
-                </span>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-1.5">
+                  <StarRating rating={product.averageRating || 0} size="sm" />
+                  <span className="text-xs font-semibold">
+                    {typeof product.averageRating === 'number' ? product.averageRating.toFixed(1) : '0.0'}
+                  </span>
+                </div>
                 <span className="text-xs text-muted-foreground">
-                  ({product.reviewsCount || 0})
+                  ({product.reviewsCount || 0} reviews)
                 </span>
               </div>
               {product.estimatedPrice && (

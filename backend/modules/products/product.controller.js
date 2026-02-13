@@ -54,7 +54,7 @@ export const getProduct = async (req, res) => {
       _id: req.params.productId,
       status: "active",
       visibility: "public",
-    });
+    }).populate("creatorId", "name avatarUrl creatorProfile");
 
     if (!product) {
       return res.status(404).json({
@@ -101,14 +101,14 @@ export const listAllProducts = async (req, res) => {
       .limit(limit)
       .select(
         "title images creatorId categoryId averageRating reviewsCount isCustomizable createdAt shortDescription description"
-  ).lean();
+      ).lean();
 
-// ensure card summary exists
-  products.forEach(p => {
-  p.shortDescription =
-    p.shortDescription ||
-    (p.description ? p.description.slice(0, 120) + "..." : "");
-});
+    // ensure card summary exists
+    products.forEach(p => {
+      p.shortDescription =
+        p.shortDescription ||
+        (p.description ? p.description.slice(0, 120) + "..." : "");
+    });
 
     const total = await Product.countDocuments({
       status: "active",
@@ -156,14 +156,14 @@ export const listProductsByCategory = async (req, res) => {
         "title images creatorId averageRating reviewsCount isCustomizable createdAt"
       ).lean();
 
-        products.forEach(p => {
-  p.shortDescription =
-    p.shortDescription ||
-    (p.description ? p.description.slice(0, 120) + "..." : "");
-});
+    products.forEach(p => {
+      p.shortDescription =
+        p.shortDescription ||
+        (p.description ? p.description.slice(0, 120) + "..." : "");
+    });
 
 
-      
+
 
     const total = await Product.countDocuments({
       categoryId,
@@ -399,11 +399,11 @@ export const searchProducts = async (req, res) => {
         "title images creatorId averageRating reviewsCount isCustomizable createdAt"
       ).lean();
 
-        results.forEach(p => {
-  p.shortDescription =
-    p.shortDescription ||
-    (p.description ? p.description.slice(0, 120) + "..." : "");
-});
+    results.forEach(p => {
+      p.shortDescription =
+        p.shortDescription ||
+        (p.description ? p.description.slice(0, 120) + "..." : "");
+    });
 
 
     const total = await Product.countDocuments(filter);

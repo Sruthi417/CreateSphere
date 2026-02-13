@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Review from "../modules/reviews/review.model.js";
 import User from "../modules/users/user.model.js";
 import Product from "../modules/products/product.model.js";
@@ -8,14 +9,15 @@ import Tutorial from "../modules/tutorials/tutorial.model.js";
    RECALCULATE ITEM RATING (ignores comment-only reviews)
 ========================================================= */
 export const updateTargetReviewStats = async (targetId, targetType) => {
+  const targetObjectId = new mongoose.Types.ObjectId(targetId);
 
   const stats = await Review.aggregate([
-    { 
-      $match: { 
-        targetId,
+    {
+      $match: {
+        targetId: targetObjectId,
         targetType,
         rating: { $ne: null }   // ⭐ only count ratings
-      } 
+      }
     },
     {
       $group: {
@@ -53,11 +55,12 @@ export const updateTargetReviewStats = async (targetId, targetType) => {
    CREATOR RATING = weighted rating from all rated items
 ========================================================= */
 export const recalculateCreatorRating = async (creatorId) => {
+  const creatorObjectId = new mongoose.Types.ObjectId(creatorId);
 
   const stats = await Review.aggregate([
-    { 
-      $match: { 
-        creatorId,
+    {
+      $match: {
+        creatorId: creatorObjectId,
         rating: { $ne: null }   // ⭐ ignore comment-only reviews
       }
     },
