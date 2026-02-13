@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authMiddleware } from "../../middlewares/auth.middleware.js";
+import { authMiddleware, optionalAuthMiddleware } from "../../middlewares/auth.middleware.js";
 import { requireRole } from "../../middlewares/role.middleware.js";
 
 import {
@@ -24,16 +24,16 @@ const creatorRoutes = Router();
 //
 
 // Home / Explore — creator cards (paginated)
-creatorRoutes.get("/", listCreators);
+creatorRoutes.get("/", optionalAuthMiddleware, listCreators);
 
 // Search creators
-creatorRoutes.get("/search", searchCreators);
+creatorRoutes.get("/search", optionalAuthMiddleware, searchCreators);
 
 // Creators filtered by category
-creatorRoutes.get("/category/:categoryId", listCreatorsByCategory);
+creatorRoutes.get("/category/:categoryId", optionalAuthMiddleware, listCreatorsByCategory);
 
 // Public creator profile (full page)
-creatorRoutes.get("/:creatorId", getCreatorPublicProfile);
+creatorRoutes.get("/:creatorId", optionalAuthMiddleware, getCreatorPublicProfile);
 
 
 //
@@ -43,10 +43,10 @@ creatorRoutes.get("/:creatorId", getCreatorPublicProfile);
 //
 
 // Start creator onboarding (user → creator_pending)
-creatorRoutes.post("/start",authMiddleware,startOnboarding);
+creatorRoutes.post("/start", authMiddleware, startOnboarding);
 
 // Complete setup (become creator)
-creatorRoutes.post("/complete",authMiddleware,completeCreatorSetup);
+creatorRoutes.post("/complete", authMiddleware, completeCreatorSetup);
 
 
 //
@@ -56,15 +56,15 @@ creatorRoutes.post("/complete",authMiddleware,completeCreatorSetup);
 //
 
 // View my creator profile
-creatorRoutes.get("/me/profile",authMiddleware,requireRole("creator"),getMyCreatorProfile);
+creatorRoutes.get("/me/profile", authMiddleware, requireRole("creator"), getMyCreatorProfile);
 
 // Update creator profile
-creatorRoutes.put("/me/profile",authMiddleware,requireRole("creator"),updateCreatorProfile);
+creatorRoutes.put("/me/profile", authMiddleware, requireRole("creator"), updateCreatorProfile);
 
 // Deactivate creator mode
-creatorRoutes.post("/me/deactivate",authMiddleware,requireRole("creator"),deactivateCreatorProfile);
+creatorRoutes.post("/me/deactivate", authMiddleware, requireRole("creator"), deactivateCreatorProfile);
 
 // Reactivate creator mode
-creatorRoutes.post("/me/reactivate",authMiddleware,reactivateCreatorProfile);
+creatorRoutes.post("/me/reactivate", authMiddleware, reactivateCreatorProfile);
 
 export default creatorRoutes;

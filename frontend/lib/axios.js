@@ -6,7 +6,7 @@ const API_BASE_URL = 'http://localhost:5001/api';
 // Create axios instance with default config
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 60000, // 60 seconds for AI operations
   headers: {
     'Content-Type': 'application/json',
   },

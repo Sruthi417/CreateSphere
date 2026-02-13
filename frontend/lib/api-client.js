@@ -15,6 +15,13 @@ export const authAPI = {
 export const userAPI = {
   getProfile: () => axiosInstance.get('/users/me/profile'),
   updateProfile: (data) => axiosInstance.put('/users/me/profile', data),
+  uploadAvatar: (file) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    return axiosInstance.patch('/users/me/profile/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
   followCreator: (creatorId) => axiosInstance.post(`/users/follow/${creatorId}`),
   unfollowCreator: (creatorId) => axiosInstance.post(`/users/unfollow/${creatorId}`),
   getFollowing: (page = 1, limit = 12) => axiosInstance.get(`/users/me/following?page=${page}&limit=${limit}`),
@@ -94,13 +101,16 @@ export const chatAPI = {
   getConversations: () => axiosInstance.get('/chat/conversations'),
   openConversation: (userId) => axiosInstance.post(`/chat/open/${userId}`),
   getMessages: (conversationId, page = 1, limit = 50) => axiosInstance.get(`/chat/${conversationId}?page=${page}&limit=${limit}`),
-  sendMessage: (conversationId, message) => axiosInstance.post(`/chat/${conversationId}`, { message }),
+  sendMessage: (conversationId, message) => axiosInstance.post(`/chat/${conversationId}`, { text: message }),
 };
 
 // Chatbot API
 export const chatbotAPI = {
-  analyze: (formData) => axiosInstance.post('/chatbot/analyze', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+  analyze: (formData, sessionId) => axiosInstance.post('/chatbot/analyze', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      ...(sessionId && { 'x-session-id': sessionId })
+    },
   }),
   generateImage: (data) => axiosInstance.post('/chatbot/generate-image', data),
   getSession: (sessionId) => axiosInstance.get(`/chatbot/session/${sessionId}`),

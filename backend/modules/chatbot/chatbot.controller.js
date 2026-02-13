@@ -156,7 +156,7 @@ export const analyzeChat = async (req, res) => {
 
         try {
           fs.unlinkSync(image.path); // delete upload file
-        } catch {}
+        } catch { }
 
         const visionResult = await craftModel.generateContent([
           {
@@ -212,9 +212,18 @@ ${inputText}
 
     if (!craftOk) {
       const narration =
-        "🚫 CreateSphere bot supports ONLY waste / craft reuse.\n" +
-        "Please ask something related to DIY, upcycling, recycling materials.\n" +
-        "Example: “I have plastic bottle and cardboard. What can I make?”";
+        "Hey there! 👋\n\n" +
+        "I'm CreateSphere's Craft Assistant, and I specialize in helping you create amazing things from recycled materials and waste items!\n\n" +
+        "I can help you with:\n" +
+        "• DIY craft projects using recyclable materials\n" +
+        "• Upcycling household items\n" +
+        "• Creative reuse of waste materials\n" +
+        "• School craft projects\n\n" +
+        "Try telling me what materials you have! For example:\n" +
+        "\"I have a glass bottle and some paint\"\n" +
+        "\"What can I make with cardboard boxes?\"\n" +
+        "\"I want to upcycle plastic bottles\"\n\n" +
+        "I'm excited to help you create something wonderful! 🎨✨";
 
       session.messages.push({ sender: "ai", output: { narration } });
       await session.save();
@@ -237,7 +246,7 @@ ${inputText}
 
     if (followUpMode) {
       const followResult = await craftModel.generateContent(`
-You are CreateSphere Craft Assistant.
+You are CreateSphere Craft Assistant - a friendly, helpful AI that guides users in creating crafts.
 
 Conversation context:
 ${memory}
@@ -248,10 +257,13 @@ ${(materials || []).join(", ")}
 Previous ideas (JSON):
 ${JSON.stringify(session.lastIdeas || [])}
 
-User follow-up:
+User follow-up question:
 ${inputText}
 
-Return plain text ONLY. No markdown.
+Respond in a natural, conversational way like you're chatting with a friend. 
+Use proper paragraphs and line breaks for readability.
+Be warm, encouraging, and helpful.
+Return plain text ONLY. No markdown, no JSON, no special formatting.
       `);
 
       const narration = cleanText(followResult.response.text());
@@ -272,31 +284,44 @@ Return plain text ONLY. No markdown.
        Generation mode: generate 3 ideas
     ======================================================= */
     const ideasResult = await craftModel.generateContent(`
-You are CreateSphere Craft Assistant.
+You are CreateSphere Craft Assistant - a warm, friendly AI that helps people create amazing crafts from recycled materials.
 
 Conversation context:
 ${memory}
 
-Return ONLY valid JSON.
-
-Use ONLY these materials:
+Materials available:
 ${materials.join(", ")}
 
-Generate 3 creative useful products.
+YOUR TASK:
+Generate AT LEAST 3 creative, useful craft project ideas using ONLY the materials listed above.
 
-JSON:
+NARRATION GUIDELINES:
+- Write a warm, natural, and detailed introduction (3-5 sentences)
+- Sound excited and encouraging, like you're chatting with a friend
+- Mention what materials you're using
+- Example: "I'm so excited to show you what we can create with your ${materials.slice(0, 2).join(' and ')}! I've designed three unique projects that range from home decor to practical storage solutions. Each one is special and perfect for different purposes!"
+
+IMPORTANT RULES:
+1. Generate AT LEAST 3 ideas (minimum 3)
+2. Each idea MUST have all required fields
+3. Make each idea unique and creative
+4. Include detailed, step-by-step instructions
+5. Add safety notes where relevant
+6. Create vivid, detailed image prompts
+
+Return ONLY valid JSON in this exact format:
 {
-  "narration": "short intro narration",
+  "narration": "Your warm, friendly 2-3 sentence introduction here",
   "ideas": [
     {
       "ideaId": "idea_1",
-      "title": "string",
-      "narration": "string",
+      "title": "Creative Project Title",
+      "narration": "Brief description of what this project is and why it's great",
       "difficulty": "easy|medium|hard",
-      "tools_required": ["tool1"],
-      "steps": ["step1","step2"],
-      "safety_notes": ["note1"],
-      "imagePrompt": "a clear image prompt"
+      "tools_required": ["tool1", "tool2"],
+      "steps": ["Step 1 description", "Step 2 description", "Step 3 description"],
+      "safety_notes": ["Safety tip 1", "Safety tip 2"],
+      "imagePrompt": "Detailed visual description for image generation"
     }
   ]
 }
@@ -336,12 +361,14 @@ JSON:
 
     await session.save();
 
+    // ✅ include youtubeLinks in API response as well
     return res.status(200).json({
       success: true,
       sessionId,
       materials,
       narration: cleanText(parsedIdeas.narration),
       ideas: enrichedIdeas,
+      youtubeLinks,
     });
   } catch (err) {
     console.error("❌ analyzeChat error:", err);

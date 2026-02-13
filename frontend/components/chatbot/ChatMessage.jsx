@@ -35,8 +35,38 @@ export default function ChatMessage({ message }) {
                     )}
 
                     {/* Render text/narration. Handles both raw text and output.narration */}
-                    <div className="whitespace-pre-wrap">
-                        {message.text || message.narration || message.output?.narration}
+                    <div className="whitespace-pre-wrap leading-relaxed">
+                        {(() => {
+                            // Extract text with multiple fallbacks
+                            let text = message.text || message.narration || message.output?.narration;
+
+                            // Ensure we never display objects or arrays
+                            if (typeof text !== 'string') {
+                                // If text is an object or array, don't display it
+                                if (!isUser && hasIdeas) {
+                                    return `I've generated ${message.ideas.length} creative ${message.ideas.length === 1 ? 'idea' : 'ideas'} for you! Check out the cards below for detailed instructions.`;
+                                }
+                                return isUser ? '' : 'Here are your craft ideas:';
+                            }
+
+                            // Clean up the text - remove any JSON-like content
+                            text = text.trim();
+
+                            // If the text looks like JSON (starts with { or [), ignore it
+                            if (text.startsWith('{') || text.startsWith('[')) {
+                                if (!isUser && hasIdeas) {
+                                    return `I've generated ${message.ideas.length} creative ${message.ideas.length === 1 ? 'idea' : 'ideas'} for you! Check out the cards below for detailed instructions.`;
+                                }
+                                return '';
+                            }
+
+                            // If text is empty but we have ideas, provide a default message
+                            if (!text && !isUser && hasIdeas) {
+                                return `Great! I've created ${message.ideas.length} unique craft ${message.ideas.length === 1 ? 'idea' : 'ideas'} using your materials. Explore each one below!`;
+                            }
+
+                            return text;
+                        })()}
                     </div>
                 </div>
 

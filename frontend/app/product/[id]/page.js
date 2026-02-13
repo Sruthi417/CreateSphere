@@ -34,8 +34,8 @@ import {
 } from 'lucide-react';
 
 export default function ProductDetailPage({ params }) {
-  const resolvedParams = use(params);
-  const productId = resolvedParams.id;
+  const productId = params.id;
+
   const router = useRouter();
   const { isAuthenticated, user } = useAuthStore();
   const [product, setProduct] = useState(null);

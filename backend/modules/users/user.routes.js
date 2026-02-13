@@ -1,9 +1,11 @@
 import { Router } from "express";
 import { authMiddleware } from "../../middlewares/auth.middleware.js";
+import { uploadMiddleware } from "../../middlewares/upload.middleware.js";
 
 import {
   getMyProfile,
   updateMyProfile,
+  uploadAvatar,
 
   followCreator,
   unfollowCreator,
@@ -21,6 +23,7 @@ const userRoutes = Router();
 // ---------- AUTH REQUIRED ----------
 userRoutes.get("/me/profile", authMiddleware, getMyProfile);
 userRoutes.put("/me/profile", authMiddleware, updateMyProfile);
+userRoutes.patch("/me/profile/avatar", authMiddleware, uploadMiddleware.single("avatar"), uploadAvatar);
 
 
 // ---------- FOLLOW SYSTEM ----------

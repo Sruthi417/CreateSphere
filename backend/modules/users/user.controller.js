@@ -81,15 +81,24 @@ export const followCreator = async (req, res) => {
     if (!user || !creator || creator.role !== "creator")
       return res.status(404).json({ success: false, message: "Creator not found" });
 
-    // already following
-    if (user.following.includes(creatorId))
-      return res.status(200).json({ success: true, message: "Already following" });
+    // Check if already following - if yes, return success without making changes
+    const isAlreadyFollowing = user.following.some(id => id.toString() === creatorId.toString());
+    
+    if (isAlreadyFollowing) {
+      // Already following, return success but don't increment again
+      return res.status(200).json({
+        success: true,
+        message: "Already following this creator",
+        data: { isFollowing: true, followersCount: creator.creatorProfile.followersCount }
+      });
+    }
 
+    // Not following yet - add to follow relationship
     user.following.push(creatorId);
-
     creator.creatorProfile.followers.push(userId);
-    creator.creatorProfile.followersCount =
-      creator.creatorProfile.followers.length;
+
+    // Recalculate followersCount from array length
+    creator.creatorProfile.followersCount = creator.creatorProfile.followers.length;
 
     await user.save();
     await creator.save();
@@ -97,6 +106,7 @@ export const followCreator = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Creator followed",
+      data: { isFollowing: true, followersCount: creator.creatorProfile.followersCount }
     });
 
   } catch {
@@ -123,15 +133,29 @@ export const unfollowCreator = async (req, res) => {
     if (!user || !creator || creator.role !== "creator")
       return res.status(404).json({ success: false, message: "Creator not found" });
 
+    // Check if not following - if true, return success without making changes
+    const isFollowing = user.following.some(id => id.toString() === creatorId.toString());
+    
+    if (!isFollowing) {
+      // Not following, return success but don't decrement
+      return res.status(200).json({
+        success: true,
+        message: "Not following this creator",
+        data: { isFollowing: false, followersCount: creator.creatorProfile.followersCount }
+      });
+    }
+
+    // Currently following - remove the follow relationship
     user.following = user.following.filter(
-      id => id.toString() !== creatorId
+      id => id.toString() !== creatorId.toString()
     );
 
     creator.creatorProfile.followers =
       creator.creatorProfile.followers.filter(
-        id => id.toString() !== userId
+        id => id.toString() !== userId.toString()
       );
 
+    // Recalculate followersCount from array length
     creator.creatorProfile.followersCount =
       creator.creatorProfile.followers.length;
 
@@ -141,6 +165,7 @@ export const unfollowCreator = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Creator unfollowed",
+      data: { isFollowing: false, followersCount: creator.creatorProfile.followersCount }
     });
 
   } catch {
@@ -227,6 +252,58 @@ export const removeFavoriteProduct = async (req, res) => {
 
   } catch {
     return res.status(500).json({ success: false, message: "Failed to remove favorite" });
+  }
+};
+
+
+
+/* =========================================================
+   UPLOAD PROFILE AVATAR
+========================================================= */
+export const uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No file uploaded" });
+    }
+
+    const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowedMimeTypes.includes(req.file.mimetype)) {
+      return res.status(400).json({ success: false, message: "Only image files are allowed (JPEG, PNG, WebP, GIF)" });
+    }
+
+    const maxFileSize = 2 * 1024 * 1024; // 2MB
+    if (req.file.size > maxFileSize) {
+      return res.status(400).json({ success: false, message: "File size must be less than 2MB" });
+    }
+
+    // Generate URL based on storage method
+    // For local storage: /uploads/{filename}
+    // For Cloudinary: would be set by middleware
+    let avatarUrl = req.file.secure_url || `/uploads/${req.file.filename}`;
+
+    // Update user with new avatar URL
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: { avatarUrl } },
+      { new: true }
+    ).select("name email avatarUrl role");
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Avatar uploaded successfully",
+      data: {
+        avatarUrl: user.avatarUrl,
+        user: user
+      }
+    });
+
+  } catch (error) {
+    console.error("Upload error:", error);
+    return res.status(500).json({ success: false, message: "Failed to upload avatar" });
   }
 };
 

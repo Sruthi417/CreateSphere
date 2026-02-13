@@ -11,7 +11,7 @@ const startServer = async () => {
   try {
     await connectToDatabase();
 
-    const port = PORT || 5001;
+    const port = PORT || 5500;
 
     app.listen(port, () => {
       console.log(`Server running on port ${port}`);

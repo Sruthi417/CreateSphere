@@ -95,6 +95,24 @@ function CreatorsContent() {
     fetchCreators();
   };
 
+  // Update a creator's follow status in the list
+  const handleCreatorFollowUpdate = (creatorId, newFollowingState, newFollowerCount) => {
+    setCreators(prevCreators => 
+      prevCreators.map(creator => 
+        creator._id === creatorId 
+          ? {
+              ...creator,
+              isFollowing: newFollowingState,
+              creatorProfile: {
+                ...creator.creatorProfile,
+                followersCount: newFollowerCount
+              }
+            }
+          : creator
+      )
+    );
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />

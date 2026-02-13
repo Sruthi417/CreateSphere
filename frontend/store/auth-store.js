@@ -103,6 +103,7 @@ export const useAuthStore = create(
         authToken: state.authToken,
         userRole: state.userRole,
         adminToken: state.adminToken,
+        user: state.user,
       }),
     }
   )

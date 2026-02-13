@@ -137,7 +137,7 @@ export const listCreators = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .select(
-        "avatarUrl creatorProfile.displayName creatorProfile.tagline creatorProfile.categories creatorProfile.rating creatorProfile.followersCount"
+        "_id avatarUrl creatorProfile.displayName creatorProfile.tagline creatorProfile.categories creatorProfile.rating creatorProfile.followersCount creatorProfile.followers"
       )
       .lean();
 
@@ -146,12 +146,29 @@ export const listCreators = async (req, res) => {
       "creatorProfile.isDeactivated": false
     });
 
+    // Add isFollowing for logged-in users
+    const creatorsWithFollowStatus = creators.map(creator => {
+      const isFollowing = req.user ? 
+        creator.creatorProfile.followers.some(id => id.toString() === req.user.id.toString()) : 
+        false;
+      
+      return {
+        ...creator,
+        isFollowing,
+        // Remove followers array from response for security
+        creatorProfile: {
+          ...creator.creatorProfile,
+          followers: undefined
+        }
+      };
+    });
+
     return res.status(200).json({
       success: true,
       page,
       totalPages: Math.ceil(total / limit),
       count: creators.length,
-      data: creators
+      data: creatorsWithFollowStatus
     });
 
   } catch {
@@ -179,7 +196,7 @@ export const getCreatorPublicProfile = async (req, res) => {
      
       "creatorProfile.isDeactivated": false
     }).select(
-      "name avatarUrl creatorProfile.displayName creatorProfile.tagline creatorProfile.fullBio creatorProfile.portfolio creatorProfile.categories creatorProfile.rating creatorProfile.followersCount"
+      "_id name avatarUrl creatorProfile.displayName creatorProfile.tagline creatorProfile.fullBio creatorProfile.portfolio creatorProfile.categories creatorProfile.rating creatorProfile.followersCount creatorProfile.followers"
     );
 
     if (!creator)
@@ -188,9 +205,25 @@ export const getCreatorPublicProfile = async (req, res) => {
         message: "Creator profile not found"
       });
 
+    // Compute isFollowing for logged-in user
+    const isFollowing = req.user ? 
+      creator.creatorProfile.followers.some(id => id.toString() === req.user.id.toString()) : 
+      false;
+
+    // Build response with followers array removed for security
+    const creatorData = creator.toObject ? creator.toObject() : creator;
+    const responseData = {
+      ...creatorData,
+      isFollowing,
+      creatorProfile: {
+        ...creatorData.creatorProfile,
+        followers: undefined
+      }
+    };
+
     return res.status(200).json({
       success: true,
-      data: creator
+      data: responseData
     });
 
   } catch {
@@ -327,7 +360,7 @@ export const listCreatorsByCategory = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .select(
-        "avatarUrl creatorProfile.displayName creatorProfile.tagline creatorProfile.categories creatorProfile.rating creatorProfile.followersCount"
+        "_id avatarUrl creatorProfile.displayName creatorProfile.tagline creatorProfile.categories creatorProfile.rating creatorProfile.followersCount creatorProfile.followers"
       )
       .lean();
 
@@ -337,12 +370,28 @@ export const listCreatorsByCategory = async (req, res) => {
       "creatorProfile.categories": categoryId
     });
 
+    // Add isFollowing for logged-in users
+    const creatorsWithFollowStatus = creators.map(creator => {
+      const isFollowing = req.user ? 
+        creator.creatorProfile.followers.some(id => id.toString() === req.user.id.toString()) : 
+        false;
+      
+      return {
+        ...creator,
+        isFollowing,
+        creatorProfile: {
+          ...creator.creatorProfile,
+          followers: undefined
+        }
+      };
+    });
+
     return res.status(200).json({
       success: true,
       page,
       totalPages: Math.ceil(total / limit),
       count: creators.length,
-      data: creators
+      data: creatorsWithFollowStatus
     });
 
   } catch {
@@ -385,18 +434,34 @@ export const searchCreators = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .select(
-        "avatarUrl creatorProfile.displayName creatorProfile.tagline creatorProfile.categories creatorProfile.rating creatorProfile.followersCount"
+        "_id avatarUrl creatorProfile.displayName creatorProfile.tagline creatorProfile.categories creatorProfile.rating creatorProfile.followersCount creatorProfile.followers"
       )
       .lean();
 
     const total = await User.countDocuments(filter);
+
+    // Add isFollowing for logged-in users
+    const resultsWithFollowStatus = results.map(creator => {
+      const isFollowing = req.user ? 
+        creator.creatorProfile.followers.some(id => id.toString() === req.user.id.toString()) : 
+        false;
+      
+      return {
+        ...creator,
+        isFollowing,
+        creatorProfile: {
+          ...creator.creatorProfile,
+          followers: undefined
+        }
+      };
+    });
 
     return res.status(200).json({
       success: true,
       page,
       totalPages: Math.ceil(total / limit),
       count: results.length,
-      data: results
+      data: resultsWithFollowStatus
     });
 
   } catch {

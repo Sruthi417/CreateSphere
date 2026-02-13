@@ -30,8 +30,9 @@ import {
 } from 'lucide-react';
 
 export default function CreatorProfilePage({ params }) {
-  const resolvedParams = use(params);
-  const creatorId = resolvedParams.id;
+  const creatorId = params.id;
+
+
   const router = useRouter();
   const { isAuthenticated, user } = useAuthStore();
   const [creator, setCreator] = useState(null);
@@ -50,7 +51,10 @@ export default function CreatorProfilePage({ params }) {
   const fetchCreator = async () => {
     try {
       const response = await creatorAPI.getById(creatorId);
-      setCreator(response.data.data);
+      const creatorData = response.data.data;
+      setCreator(creatorData);
+      // Initialize following state from API response
+      setFollowing(creatorData.isFollowing || false);
     } catch (error) {
       toast.error('Failed to load creator profile');
       router.push('/explore/creators');
@@ -85,15 +89,28 @@ export default function CreatorProfilePage({ params }) {
 
     setFollowLoading(true);
     try {
+      let response;
       if (following) {
-        await userAPI.unfollowCreator(creatorId);
+        response = await userAPI.unfollowCreator(creatorId);
         toast.success('Unfollowed creator');
       } else {
-        await userAPI.followCreator(creatorId);
+        response = await userAPI.followCreator(creatorId);
         toast.success('Following creator');
       }
-      setFollowing(!following);
-      fetchCreator(); // Refresh follower count
+
+      // Update state from backend response (single source of truth)
+      const { isFollowing, followersCount: newCount } = response.data.data;
+      setFollowing(isFollowing);
+
+      // Update creator data with backend values
+      setCreator(prev => ({
+        ...prev,
+        isFollowing,
+        creatorProfile: {
+          ...prev.creatorProfile,
+          followersCount: newCount
+        }
+      }));
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update follow status');
     } finally {

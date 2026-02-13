@@ -12,9 +12,12 @@ import { useAuthStore } from '@/store/auth-store';
 import { userAPI } from '@/lib/api-client';
 import { toast } from 'sonner';
 
-export default function CreatorCard({ creator, index = 0, isFollowing = false }) {
+export default function CreatorCard({ creator, index = 0 }) {
   const { isAuthenticated, user } = useAuthStore();
-  const [following, setFollowing] = useState(isFollowing);
+  // Initialize following state from creator.isFollowing from API
+  const [following, setFollowing] = useState(creator.isFollowing || false);
+  // Track follower count changes
+  const [followersCount, setFollowersCount] = useState(creator.creatorProfile?.followersCount || 0);
   const [loading, setLoading] = useState(false);
   const profile = creator.creatorProfile || {};
 
@@ -34,14 +37,19 @@ export default function CreatorCard({ creator, index = 0, isFollowing = false })
 
     setLoading(true);
     try {
+      let response;
       if (following) {
-        await userAPI.unfollowCreator(creator._id);
+        response = await userAPI.unfollowCreator(creator._id);
         toast.success('Unfollowed creator');
       } else {
-        await userAPI.followCreator(creator._id);
+        response = await userAPI.followCreator(creator._id);
         toast.success('Following creator');
       }
-      setFollowing(!following);
+
+      // Update state from backend response (single source of truth)
+      const { isFollowing, followersCount: newCount } = response.data.data;
+      setFollowing(isFollowing);
+      setFollowersCount(newCount);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update follow status');
     } finally {
@@ -81,7 +89,7 @@ export default function CreatorCard({ creator, index = 0, isFollowing = false })
               <div className="flex items-center gap-4 mt-4">
                 <div className="flex items-center gap-1 text-sm">
                   <Users className="h-4 w-4 text-muted-foreground" />
-                  <span>{profile.followersCount || 0}</span>
+                  <span>{followersCount}</span>
                 </div>
                 <div className="flex items-center gap-1 text-sm">
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />

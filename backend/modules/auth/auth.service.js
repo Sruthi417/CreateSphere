@@ -106,16 +106,35 @@ export const verifyEmail = async (token) => {
     emailVerificationExpires: { $gt: new Date() },
   }).select("+emailVerificationToken +emailVerificationExpires");
 
-  if (!user) throw new Error("Invalid or expired verification token");
+  // 🔥 CASE 1: Token matches active verification
+  if (user) {
+    if (user.emailVerified) {
+      return { alreadyVerified: true };
+    }
 
-  user.emailVerified = true;
-  user.emailVerificationToken = null;
-  user.emailVerificationExpires = null;
+    user.emailVerified = true;
+    user.emailVerificationToken = null;
+    user.emailVerificationExpires = null;
 
-  await user.save();
+    await user.save();
 
-  return true;
+    return { verified: true };
+  }
+
+  // 🔥 CASE 2: Maybe already verified earlier (token used before)
+  const alreadyVerifiedUser = await User.findOne({
+    emailVerificationToken: null,
+    emailVerified: true,
+  });
+
+  if (alreadyVerifiedUser) {
+    return { alreadyVerified: true };
+  }
+
+  // 🔥 CASE 3: Truly invalid or expired
+  throw new Error("Invalid or expired verification token");
 };
+
 
 
 /* =========================================================
@@ -138,7 +157,8 @@ export const resendVerificationEmail = async (email) => {
   user.emailVerificationExpires = new Date(Date.now() + verifyExpiryMinutes * 60 * 1000);
   await user.save();
 
-  const verifyLink = `${SERVER_URL}/verify-email?token=${rawToken}`;
+  const verifyLink = `${CLIENT_URL}/verify-email?token=${rawToken}`;
+
 
   await sendMail({
     to: user.email,

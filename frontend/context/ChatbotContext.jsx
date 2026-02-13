@@ -50,6 +50,7 @@ export const ChatbotProvider = ({ children }) => {
   return (
     <ChatbotContext.Provider value={{
       sessionId,
+      setSessionId,
       messages,
       setMessages,
       ideas,

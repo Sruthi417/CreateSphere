@@ -28,12 +28,20 @@ export const verifyEmailController = async (req, res) => {
   try {
     const { token } = req.query;
 
-    await verifyEmail(token);
+    const result = await verifyEmail(token);
 
-    return res.status(200).json({
-      success: true,
-      message: "Email verified successfully. You can now login.",
-    });
+if (result?.alreadyVerified) {
+  return res.status(200).json({
+    success: true,
+    message: "Email already verified. You can login.",
+  });
+}
+
+return res.status(200).json({
+  success: true,
+  message: "Email verified successfully. You can now login.",
+});
+
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
   }

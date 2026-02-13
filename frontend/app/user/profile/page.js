@@ -10,6 +10,7 @@ import { userAPI } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth-store';
 import Navbar from '@/components/navbar';
 import Footer from '@/components/footer';
+import AvatarUpload from '@/components/avatar-upload';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,6 +32,7 @@ export default function UserProfilePage() {
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm({
     resolver: zodResolver(profileSchema),
   });
@@ -63,14 +65,28 @@ export default function UserProfilePage() {
   const onSubmit = async (data) => {
     setSaving(true);
     try {
-      const response = await userAPI.updateProfile(data);
+      // Exclude avatarUrl from the update payload
+      // The avatar is uploaded and saved separately via the AvatarUpload component
+      // Sending it here might revert changes if the form state is stale
+      const { avatarUrl, ...profileData } = data;
+
+      const response = await userAPI.updateProfile(profileData);
       setUser({ ...user, ...response.data.data });
+      setProfile(response.data.data);
       toast.success('Profile updated successfully');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update profile');
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleAvatarUploadSuccess = (newAvatarUrl) => {
+    // Update profile with new avatar URL
+    const updatedProfile = { ...profile, avatarUrl: newAvatarUrl };
+    setProfile(updatedProfile);
+    setUser({ ...user, avatarUrl: newAvatarUrl });
+    setValue('avatarUrl', newAvatarUrl, { shouldDirty: true });
   };
 
   if (loading) {
@@ -104,12 +120,12 @@ export default function UserProfilePage() {
               <Card className="mb-8">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-6">
-                    <Avatar className="h-20 w-20">
-                      <AvatarImage src={profile?.avatarUrl} />
-                      <AvatarFallback className="text-2xl">
-                        {profile?.name?.charAt(0) || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
+                    <AvatarUpload
+                      currentAvatar={profile?.avatarUrl}
+                      fallback={profile?.name?.charAt(0)}
+                      onSuccess={handleAvatarUploadSuccess}
+                      className="h-24 w-24"
+                    />
                     <div>
                       <h2 className="text-2xl font-semibold">{profile?.name}</h2>
                       <p className="text-muted-foreground flex items-center gap-1">
@@ -134,6 +150,10 @@ export default function UserProfilePage() {
                 <CardContent>
                   <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     <div className="space-y-2">
+                      {/* Profile picture is updated by clicking the avatar above */}
+                    </div>
+
+                    <div className="space-y-2">
                       <Label htmlFor="name">Full Name</Label>
                       <Input
                         id="name"
@@ -145,17 +165,8 @@ export default function UserProfilePage() {
                       )}
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="avatarUrl">Avatar URL</Label>
-                      <Input
-                        id="avatarUrl"
-                        placeholder="https://example.com/avatar.jpg"
-                        {...register('avatarUrl')}
-                      />
-                      {errors.avatarUrl && (
-                        <p className="text-sm text-destructive">{errors.avatarUrl.message}</p>
-                      )}
-                    </div>
+                    {/* URL Input removed in favor of direct upload - keeping hidden field for form state */}
+                    <input type="hidden" {...register('avatarUrl')} />
 
                     <Button type="submit" disabled={saving}>
                       {saving ? (
