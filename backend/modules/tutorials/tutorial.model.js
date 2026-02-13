@@ -1,14 +1,21 @@
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 
+const TopicSchema = new Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    videoUrl: { type: String, default: "" }, // Placeholder for future
+    duration: { type: Number, default: 0 },
+  },
+  { _id: true }
+);
+
 const LessonSchema = new Schema(
   {
-    lessonNumber: Number,
-    title: String,
-    videoUrl: String,
-    duration: Number,
+    title: { type: String, required: true, trim: true },
+    topics: [TopicSchema],
   },
-  { _id: false }
+  { _id: true }
 );
 
 const TutorialSchema = new Schema(
@@ -22,8 +29,8 @@ const TutorialSchema = new Schema(
 
     title: { type: String, required: true, trim: true },
     description: { type: String, trim: true },
-
-    thumbnailUrl: String,
+    thumbnailUrl: { type: String, default: "" },
+    tags: [{ type: String, trim: true }],
 
     lessons: [LessonSchema],
 
@@ -33,12 +40,10 @@ const TutorialSchema = new Schema(
       index: true,
     },
 
-    isPlaylist: { type: Boolean, default: false },
-
     type: {
       type: String,
       enum: ["free", "course"],
-      default: "free",
+      default: "course",
     },
 
     averageRating: { type: Number, default: 0 },

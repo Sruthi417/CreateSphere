@@ -52,7 +52,9 @@ export const getTutorial = async (req, res) => {
       _id: req.params.tutorialId,
       status: "active",
       visibility: "public",
-    }).populate("creatorId", "name avatarUrl creatorProfile");
+    })
+      .populate("creatorId", "name avatarUrl creatorProfile")
+      .populate("categoryId", "name");
 
     if (!tutorial) {
       return res.status(404).json({
@@ -66,7 +68,8 @@ export const getTutorial = async (req, res) => {
       data: tutorial,
     });
 
-  } catch {
+  } catch (error) {
+    console.error("getTutorial error:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to fetch tutorial",
@@ -98,7 +101,7 @@ export const listAllTutorials = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .select(
-        "title thumbnailUrl creatorId categoryId averageRating reviewsCount isPlaylist type createdAt description"
+        "title thumbnailUrl creatorId categoryId averageRating reviewsCount type createdAt description"
       )
       .lean();
 
@@ -153,7 +156,7 @@ export const listTutorialsByCategory = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .select(
-        "title thumbnailUrl creatorId averageRating reviewsCount isPlaylist type createdAt description"
+        "title thumbnailUrl creatorId averageRating reviewsCount type createdAt description"
       )
       .lean();
 
@@ -386,6 +389,7 @@ export const searchTutorials = async (req, res) => {
       $or: [
         { title: { $regex: q, $options: "i" } },
         { description: { $regex: q, $options: "i" } },
+        { tags: { $regex: q, $options: "i" } },
       ],
     };
 
@@ -394,7 +398,7 @@ export const searchTutorials = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .select(
-        "title thumbnailUrl creatorId averageRating reviewsCount isPlaylist type createdAt description"
+        "title thumbnailUrl creatorId averageRating reviewsCount type createdAt description tags"
       )
       .lean();
 

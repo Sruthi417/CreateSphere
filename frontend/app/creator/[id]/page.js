@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import { getImageUrl } from '@/lib/utils';
 import {
   Star,
   Users,
@@ -184,7 +185,7 @@ export default function CreatorProfilePage({ params }) {
               className="flex flex-col md:flex-row items-start gap-6 mb-8"
             >
               <Avatar className="h-24 w-24 md:h-32 md:w-32">
-                <AvatarImage src={creator.avatarUrl} alt={profile.displayName} />
+                <AvatarImage src={getImageUrl(creator.avatarUrl)} alt={profile.displayName} />
                 <AvatarFallback className="text-3xl">
                   {profile.displayName?.charAt(0) || creator.name?.charAt(0) || 'C'}
                 </AvatarFallback>

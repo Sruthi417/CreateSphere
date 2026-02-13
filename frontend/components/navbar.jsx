@@ -32,6 +32,7 @@ import {
   Palette,
   ShieldCheck,
 } from 'lucide-react';
+import { getImageUrl } from '@/lib/utils';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -136,7 +137,7 @@ export default function Navbar() {
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={user?.avatarUrl} alt={user?.name} />
+                          <AvatarImage src={getImageUrl(user?.avatarUrl)} alt={user?.name} />
                           <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>
                         </Avatar>
                       </Button>

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import Navbar from '@/components/navbar';
@@ -34,7 +34,8 @@ import {
 } from 'lucide-react';
 import ProductImage from '@/components/ui/product-image';
 
-export default function ProductDetailPage({ params }) {
+export default function ProductDetailPage() {
+  const params = useParams();
   const productId = params.id;
 
   const router = useRouter();

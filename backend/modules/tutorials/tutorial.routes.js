@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authMiddleware } from "../../middlewares/auth.middleware.js";
 import { requireRole } from "../../middlewares/role.middleware.js";
+import { uploadMiddleware } from "../../middlewares/upload.middleware.js";
 
 import {
   createTutorial,
@@ -73,6 +74,26 @@ tutorialRouter.post(
   authMiddleware,
   requireRole("creator"),
   restoreTutorial
+);
+
+// Upload tutorial thumbnail
+tutorialRouter.post(
+  "/thumbnail/upload",
+  authMiddleware,
+  requireRole("creator"),
+  uploadMiddleware.single("image"),
+  (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No image uploaded" });
+    }
+
+    const imageUrl = `/uploads/${req.file.filename}`;
+
+    return res.status(200).json({
+      success: true,
+      url: imageUrl
+    });
+  }
 );
 
 

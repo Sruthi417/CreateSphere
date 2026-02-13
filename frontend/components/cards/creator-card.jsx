@@ -12,6 +12,7 @@ import { useState } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import { userAPI } from '@/lib/api-client';
 import { toast } from 'sonner';
+import { getImageUrl } from '@/lib/utils';
 
 export default function CreatorCard({ creator, index = 0 }) {
   const { isAuthenticated, user } = useAuthStore();
@@ -69,7 +70,7 @@ export default function CreatorCard({ creator, index = 0 }) {
           <CardContent className="p-6">
             <div className="flex flex-col items-center text-center">
               <Avatar className="h-20 w-20 mb-4">
-                <AvatarImage src={creator.avatarUrl} alt={profile.displayName} />
+                <AvatarImage src={getImageUrl(creator.avatarUrl)} alt={profile.displayName} />
                 <AvatarFallback className="text-xl">
                   {profile.displayName?.charAt(0) || creator.name?.charAt(0) || 'C'}
                 </AvatarFallback>

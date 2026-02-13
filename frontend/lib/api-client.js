@@ -73,6 +73,9 @@ export const tutorialAPI = {
   delete: (tutorialId) => axiosInstance.delete(`/tutorials/${tutorialId}`),
   restore: (tutorialId) => axiosInstance.post(`/tutorials/${tutorialId}/restore`),
   getMyList: () => axiosInstance.get('/tutorials/me/list'),
+  uploadThumbnail: (formData) => axiosInstance.post('/tutorials/thumbnail/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
 };
 
 // Category API
