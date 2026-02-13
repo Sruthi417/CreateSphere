@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Wand2, Loader2, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import IdeaDetailModal from './IdeaDetailModal';
+import SmartImage from '@/components/ui/smart-image';
 
 export default function IdeaCard({ idea }) {
     const { sessionId, setIdeas, setMessages, materials } = useChatbot();
@@ -89,11 +90,10 @@ export default function IdeaCard({ idea }) {
         <>
             <Card className="w-full min-w-[280px] max-w-[320px] bg-card hover:shadow-lg transition-shadow border-muted">
                 <div className="relative h-40 bg-muted overflow-hidden rounded-t-lg">
-                    <img
-                        src={generatedImageUrl || '/placeholder-craft.jpg'} // Make sure to have a placeholder or handle empty
+                    <SmartImage
+                        src={generatedImageUrl}
                         alt={idea.title}
                         className={`w-full h-full object-cover transition-opacity ${generatedImageUrl ? 'opacity-100' : 'opacity-50 grayscale'}`}
-                        onError={(e) => { e.target.src = 'https://placehold.co/600x400?text=Craft+Idea'; }}
                     />
                     <div className="absolute top-2 left-2">
                         <Badge variant={difficultyColor[idea.difficulty] || 'outline'}>

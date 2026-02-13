@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Clock, BarChart2, PlayCircle, FileText, BookOpen } from 'lucide-react';
+import SmartImage from '@/components/ui/smart-image';
 
 export default function TutorialCard({ tutorial, index = 0 }) {
   const difficultyColors = {
@@ -30,17 +31,11 @@ export default function TutorialCard({ tutorial, index = 0 }) {
       <Link href={`/tutorial/${tutorial._id}`}>
         <Card className="group overflow-hidden h-full hover:shadow-lg transition-all duration-300 cursor-pointer">
           <div className="relative aspect-video overflow-hidden bg-muted">
-            {tutorial.thumbnailUrl || tutorial.images?.[0] ? (
-              <img
-                src={tutorial.thumbnailUrl || tutorial.images?.[0]}
-                alt={tutorial.title}
-                className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full bg-gradient-to-br from-primary/10 to-primary/20">
-                <TypeIcon className="h-12 w-12 text-primary/50" />
-              </div>
-            )}
+            <SmartImage
+              src={tutorial.thumbnailUrl || tutorial.images?.[0]}
+              alt={tutorial.title}
+              className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+            />
             <div className="absolute top-2 left-2 flex gap-2">
               <Badge variant="secondary" className="flex items-center gap-1">
                 <TypeIcon className="h-3 w-3" />

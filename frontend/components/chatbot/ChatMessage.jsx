@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Bot, User } from 'lucide-react';
 import IdeaCard from './IdeaCard';
 import { motion } from 'framer-motion';
+import SmartImage from '@/components/ui/smart-image';
 
 export default function ChatMessage({ message }) {
     const isUser = message.sender === 'user';
@@ -31,7 +32,7 @@ export default function ChatMessage({ message }) {
             ${isUser ? 'bg-primary text-primary-foreground rounded-br-none' : 'bg-muted/80 text-secondary-foreground rounded-bl-none'}
         `}>
                     {message.image && (
-                        <img src={message.image} alt="uploaded" className="mb-2 max-h-48 rounded-lg object-cover bg-black/10" />
+                        <SmartImage src={message.image} alt="uploaded" className="mb-2 max-h-48 rounded-lg object-cover bg-black/10 w-full" />
                     )}
 
                     {/* Render text/narration. Handles both raw text and output.narration */}

@@ -32,5 +32,5 @@ export const resetPasswordSchema = z.object({
 
 export const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(50).optional(),
-  avatarUrl: z.string().url('Invalid URL').optional().or(z.literal('')),
+  avatarUrl: z.string().optional().or(z.literal('')),
 });

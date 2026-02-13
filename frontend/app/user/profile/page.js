@@ -26,6 +26,7 @@ export default function UserProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState(null);
+  console.log(profile);
 
   const {
     register,
@@ -65,14 +66,12 @@ export default function UserProfilePage() {
   const onSubmit = async (data) => {
     setSaving(true);
     try {
-      // Exclude avatarUrl from the update payload
-      // The avatar is uploaded and saved separately via the AvatarUpload component
-      // Sending it here might revert changes if the form state is stale
-      const { avatarUrl, ...profileData } = data;
+      // Send the full data to the update profile endpoint
+      const response = await userAPI.updateProfile(data);
 
-      const response = await userAPI.updateProfile(profileData);
-      setUser({ ...user, ...response.data.data });
-      setProfile(response.data.data);
+      const updatedUser = response.data.data;
+      setUser({ ...user, ...updatedUser });
+      setProfile(updatedUser);
       toast.success('Profile updated successfully');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update profile');
@@ -148,7 +147,7 @@ export default function UserProfilePage() {
                   <CardDescription>Update your personal information</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                  <form onSubmit={handleSubmit(onSubmit, (err) => console.log('Validation errors:', err))} className="space-y-6">
                     <div className="space-y-2">
                       {/* Profile picture is updated by clicking the avatar above */}
                     </div>

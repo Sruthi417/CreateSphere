@@ -10,6 +10,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Wrench, AlertTriangle, ListOrdered, Save } from 'lucide-react';
+import SmartImage from '@/components/ui/smart-image';
 
 export default function IdeaDetailModal({ idea, onClose, open }) {
     if (!idea) return null;
@@ -33,7 +34,7 @@ export default function IdeaDetailModal({ idea, onClose, open }) {
                     {/* Image */}
                     {(idea.generatedImage || idea.image) && (
                         <div className="rounded-lg overflow-hidden border bg-muted">
-                            <img
+                            <SmartImage
                                 src={idea.generatedImage || idea.image}
                                 alt={idea.title}
                                 className="w-full h-64 object-cover"
