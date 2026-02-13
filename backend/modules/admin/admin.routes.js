@@ -9,6 +9,10 @@ import {
   rejectCreatorVerification,
   revokeCreatorVerification,
   listPriorityReports,
+  listReportedCreators,
+  getReportDetails,
+  dismissReports,
+  listAdmins,
   adminModerateAccount
 } from "./admin.controller.js";
 
@@ -36,8 +40,12 @@ adminRouter.post("/creators/:creatorId/revoke", revokeCreatorVerification);
 
 /* Priority report queue */
 adminRouter.get("/reports/priority", listPriorityReports);
+adminRouter.get("/reports/creators", listReportedCreators);
+adminRouter.get("/reports/details/:targetId", getReportDetails);
+adminRouter.delete("/reports/dismiss/:targetId", dismissReports);
 
-/* User / Creator moderation */
+/* User / Creator / Admin moderation */
+adminRouter.get("/admins/list", listAdmins);
 adminRouter.post("/moderate/:targetId", adminModerateAccount);
 
 /* Resolve reports */

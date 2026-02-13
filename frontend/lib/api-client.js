@@ -133,5 +133,9 @@ export const adminAPI = {
   restoreContent: (targetType, targetId) => axiosInstance.post(`/admin/content/${targetType}/${targetId}/restore`),
   removeContent: (targetType, targetId, reason) => axiosInstance.post(`/admin/content/${targetType}/${targetId}/remove`, { reason }),
   resolveReport: (reportId, data) => axiosInstance.post(`/admin/reports/${reportId}/resolve`, data),
+  getReportedCreators: () => axiosInstance.get('/admin/reports/creators'),
+  getReportDetails: (targetId) => axiosInstance.get(`/admin/reports/details/${targetId}`),
+  dismissReports: (targetId) => axiosInstance.delete(`/admin/reports/dismiss/${targetId}`),
+  getAdmins: () => axiosInstance.get('/admin/admins/list'),
   getChatbotSessions: () => axiosInstance.get('/chatbot/admin/sessions'),
 };
