@@ -17,9 +17,6 @@ export const adminHideContent = async (req, res) => {
 
     item.status = "hidden";
     item.isBlocked = true;
-    item.moderation.hiddenUntil =
-      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    item.moderation.reason = reason;
 
     await item.save();
 
@@ -48,8 +45,6 @@ export const adminRestoreContent = async (req, res) => {
 
     item.status = "active";
     item.isBlocked = false;
-    item.moderation.hiddenUntil = null;
-    item.moderation.reason = "Restored by admin";
 
     await item.save();
 
@@ -76,7 +71,6 @@ export const adminRemoveContent = async (req, res) => {
 
     item.status = "removed";
     item.isBlocked = true;
-    item.moderation.reason = reason;
 
     await item.save();
 

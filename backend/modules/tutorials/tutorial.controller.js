@@ -362,7 +362,6 @@ export const restoreTutorial = async (req, res) => {
       });
 
     tutorial.status = "active";
-    tutorial.moderation.hiddenUntil = null;
 
     await tutorial.save();
 

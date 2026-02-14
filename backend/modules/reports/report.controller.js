@@ -48,12 +48,6 @@ export const submitReport = async (req, res) => {
     // Increment reportsCount on the target object
     target.reportsCount = (target.reportsCount || 0) + 1;
 
-    if (targetType === "creator" || targetType === "user") {
-      if (target.moderation) {
-        target.moderation.strikeCount = (target.moderation.strikeCount || 0) + 1;
-      }
-    }
-
     // Count total instances in Report collection (as backup/verification)
     const reportCount = await Report.countDocuments({ targetId, targetType });
 

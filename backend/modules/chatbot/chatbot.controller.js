@@ -389,6 +389,15 @@ Return ONLY valid JSON in this exact format:
   } catch (err) {
     console.error("❌ analyzeChat error:", err);
 
+    // ✅ Handle Gemini Quota Exceeded
+    if (err.message?.includes("429") || err.message?.toLowerCase().includes("quota") || err.message?.includes("RESOURCES_EXHAUSTED")) {
+      return res.status(429).json({
+        success: false,
+        code: "QUOTA_EXCEEDED",
+        message: "⚠ Gemini API quota has been reached (60 requests per minute). Please wait a moment and try again.",
+      });
+    }
+
     return res.status(500).json({
       success: false,
       code: "SERVER_ERROR",
@@ -506,10 +515,20 @@ export const generateImage = async (req, res) => {
   } catch (err) {
     console.error("❌ generateImage error:", err);
 
+    // ✅ Handle specific service errors (Pollinations or Gemini)
+    const errorMsg = err.message || "";
+    if (errorMsg.includes("429") || errorMsg.toLowerCase().includes("quota")) {
+      return res.status(429).json({
+        success: false,
+        code: "RATE_LIMIT_EXCEEDED",
+        message: `⚠ ${errorMsg.includes("Pollinations") ? "Pollinations" : "Gemini"} rate limit reached. Please try again in a minute.`,
+      });
+    }
+
     return res.status(500).json({
       success: false,
       code: "IMAGE_GEN_FAILED",
-      message: "⚠ Image generation failed. Please try again.",
+      message: errorMsg || "⚠ Image generation failed. Please try again.",
     });
   }
 };

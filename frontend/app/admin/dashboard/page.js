@@ -599,7 +599,7 @@ export default function AdminDashboardPage() {
                       return (r._id?.targetType || r.targetType) === reportFilter;
                     })
                     .map((report, index) => (
-                      <Card key={index} className={report.content?.moderation?.status === 'banned' ? 'opacity-50 grayscale' : ''}>
+                      <Card key={index} className={report.content?.isBlocked ? 'opacity-50 grayscale' : ''}>
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between">
                             <div className="flex gap-4">
@@ -623,14 +623,11 @@ export default function AdminDashboardPage() {
                                   <Badge variant="outline">
                                     {report.count || 1} reports
                                   </Badge>
-                                  {report.content?.moderation?.status === 'banned' && (
-                                    <Badge variant="secondary">BANNED</Badge>
+                                  {report.content?.isBlocked && (
+                                    <Badge variant="secondary">BLOCKED/BANNED</Badge>
                                   )}
-                                  {report.content?.moderation?.status === 'hidden' && (
+                                  {report.content?.status === 'hidden' && (
                                     <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">HIDDEN</Badge>
-                                  )}
-                                  {report.content?.moderation?.status === 'suspended' && (
-                                    <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200">SUSPENDED</Badge>
                                   )}
                                 </div>
                                 <h3 className="font-semibold mb-1">
@@ -655,8 +652,8 @@ export default function AdminDashboardPage() {
                                   <div className="mt-2 p-2 bg-muted/30 rounded border border-dashed text-xs">
                                     <span className="text-muted-foreground">Creator: </span>
                                     <span className="font-medium text-primary">{report.creator.name}</span>
-                                    {report.creator.moderation?.status === 'banned' && (
-                                      <Badge variant="destructive" className="ml-2 h-4 text-[8px] px-1">BANNED</Badge>
+                                    {report.creator.isBlocked && (
+                                      <Badge variant="destructive" className="ml-2 h-4 text-[8px] px-1">BLOCKED</Badge>
                                     )}
                                   </div>
                                 )}
@@ -676,7 +673,6 @@ export default function AdminDashboardPage() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="w-full"
                                 onClick={() => handleViewReportDetails(report._id?.targetId || report.targetId)}
                               >
                                 <Eye className="h-4 w-4 mr-1" />
@@ -684,7 +680,7 @@ export default function AdminDashboardPage() {
                               </Button>
 
                               {/* Restore Button for Content or Account */}
-                              {(report.content?.status === 'hidden' || report.content?.moderation?.status === 'hidden' || report.content?.moderation?.status === 'suspended') ? (
+                              {(report.content?.status === 'hidden' || report.content?.isBlocked) ? (
                                 <Button
                                   size="sm"
                                   variant="secondary"
@@ -725,7 +721,7 @@ export default function AdminDashboardPage() {
                                       });
                                     }
                                   }}
-                                  disabled={report.content?.moderation?.status === 'banned' || report.content?.status === 'removed'}
+                                  disabled={report.content?.isBlocked || report.content?.status === 'removed'}
                                 >
                                   <EyeOff className="h-4 w-4 mr-1" />
                                   Hide
@@ -748,7 +744,7 @@ export default function AdminDashboardPage() {
                               </Button>
 
                               {/* Ban Button - only for accounts or content escalations */}
-                              {report.content?.moderation?.status !== 'banned' && (
+                              {!report.content?.isBlocked && (
                                 <Button
                                   size="sm"
                                   variant="destructive"
@@ -791,8 +787,8 @@ export default function AdminDashboardPage() {
                             {admin.adminDetails?.isSuperAdmin && (
                               <Badge className="bg-purple-100 text-purple-700 border-purple-200">Super Admin</Badge>
                             )}
-                            {admin.moderation?.status === 'banned' && (
-                              <Badge variant="destructive">BANNED</Badge>
+                            {admin.isBlocked && (
+                              <Badge variant="destructive">BLOCKED</Badge>
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground">{admin.email}</p>
@@ -800,7 +796,7 @@ export default function AdminDashboardPage() {
                         </div>
                         <div className="flex gap-2">
                           {/* Only Super Admins can ban other admins, and can't ban self */}
-                          {userRole === 'admin' && admin.moderation?.status !== 'banned' && (
+                          {userRole === 'admin' && !admin.isBlocked && (
                             <Button
                               size="sm"
                               variant="destructive"

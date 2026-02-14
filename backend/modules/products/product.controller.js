@@ -354,7 +354,6 @@ export const restoreProduct = async (req, res) => {
       });
 
     product.status = "active";
-    product.moderation.hiddenUntil = null;
 
     await product.save();
 

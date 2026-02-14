@@ -22,8 +22,7 @@ export const adminResolveUserReport = async (req, res) => {
     await report.save();
 
     return res.status(200).json({
-      success: true,
-      moderation: user.moderation
+      success: true
     });
 
   } catch {

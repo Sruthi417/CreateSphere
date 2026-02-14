@@ -13,11 +13,6 @@ const CreatorProfileSchema = new Schema(
 
     portfolio: [{ type: String }],
 
-    moderation: {
-      reason: { type: String, default: null },
-      hiddenUntil: { type: Date, default: null },
-      strikeCount: { type: Number, default: 0 }
-    },
 
 
     categories: [
@@ -188,13 +183,6 @@ const UserSchema = new Schema(
       default: 0,
     },
 
-    moderation: {
-      status: { type: String, default: "active" },
-      strikeCount: { type: Number, default: 0 },
-      suspendedUntil: { type: Date, default: null },
-      lastAction: { type: String, default: null },
-      lastReason: { type: String, default: null }
-    },
 
 
 

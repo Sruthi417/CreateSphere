@@ -29,29 +29,18 @@ export const findTargetItem = async (id, type) => {
 
 /* =======================================================
    AUTO-MODERATION (Used by REPORT SYSTEM)
-   - Strike 1–2 → warning only
-   - Strike 3 → auto-hide 7 days
-   - Strike 4+ → escalate to admin
+   - Using reportsCount as the strike indicator
+   - Threshold 3 -> auto-hide
 ======================================================= */
 export const applyModerationStrike = async (target, targetType, reasonText) => {
-  const sevenDaysLater = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-  // Get correct moderation object
-  const mod =
-    targetType === "creator"
-      ? target.creatorProfile.moderation
-      : target.moderation;
-
-  mod.strikeCount = (mod.strikeCount || 0) + 1;
+  const currentStrikes = target.reportsCount || 0;
 
   /* =======================================================
      CASE 1 — USER / CREATOR REPORTS
      => ALWAYS admin review (no auto-action)
   ======================================================= */
   if (targetType === "creator" || targetType === "user") {
-
-    mod.reason = `Requires manual admin review — ${reasonText}`;
-
     await target.save();
     await notifyUser(
       target._id,
@@ -66,25 +55,19 @@ export const applyModerationStrike = async (target, targetType, reasonText) => {
   ======================================================= */
 
   // Strike 1–2 → warning only
-  if (mod.strikeCount < 3) {
-
-    mod.reason = `⚠ Warning issued: ${reasonText}`;
+  if (currentStrikes < 3) {
     await target.save();
 
     await notifyUser(
       target.creatorId,
-      mod.reason
+      `⚠ Warning issued: ${reasonText}`
     );
 
     return "warning_only";
   }
 
-  // Strike 3 → auto-hide content 7 days
-  if (mod.strikeCount === 3) {
-
-    mod.reason = "Content hidden due to repeated user reports";
-    mod.hiddenUntil = sevenDaysLater;
-
+  // Strike 3 → auto-hide content
+  if (currentStrikes >= 3) {
     if (target.status) target.status = "hidden";
     target.isBlocked = true;
 
@@ -92,17 +75,13 @@ export const applyModerationStrike = async (target, targetType, reasonText) => {
 
     await notifyUser(
       target.creatorId,
-      "⛔ Your content was automatically hidden for 7 days due to reports"
+      "⛔ Your content was automatically hidden due to multiple reports"
     );
 
     return "temporarily_hidden";
   }
 
-  // Strike 4+ → admin review only
-  mod.reason = "Repeated reports — escalated to admin review";
-  await target.save();
-
-  return "admin_review_required";
+  return "stored";
 };
 
 
@@ -118,52 +97,34 @@ export const applyModerationAction = async ({
   const user = await User.findById(targetId);
   if (!user) throw new Error("User not found");
 
-  const mod = user.moderation;
-
   switch (action) {
 
     /* Issue warning */
     case "warn":
-      mod.strikeCount++;
-      mod.status = "warned";
-      mod.lastReason = reason;
-
       await notifyUser(user._id, "⚠ Warning issued — " + reason);
       break;
 
 
     /* Suspend account */
     case "suspend":
-      mod.strikeCount++;
-      mod.status = "suspended";
-      mod.suspendedUntil =
-        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-      await notifyUser(user._id, "⛔ Account suspended for 7 days");
+      user.isBlocked = true;
+      await notifyUser(user._id, "⛔ Account suspended — " + reason);
       break;
 
 
     /* Indefinite Hide */
     case "hide":
-      mod.status = "hidden";
-      mod.lastReason = reason;
-
       user.isBlocked = true;
-
       await notifyUser(user._id, "⚠ Your profile has been hidden by an admin — " + reason);
       break;
 
 
     /* Permanent ban */
     case "ban":
-      mod.status = "banned";
-      mod.lastReason = reason;
       user.isBlocked = true;
-
       await notifyUser(user._id, "❌ Your account has been permanently banned");
 
       if (user.role === "creator") {
-
         // hide all creator content
         await Product.updateMany(
           { creatorId: user._id },
@@ -180,11 +141,7 @@ export const applyModerationAction = async ({
 
     /* Reinstate */
     case "reinstate":
-      mod.status = "active";
-      mod.suspendedUntil = null;
-      mod.lastReason = null;
       user.isBlocked = false;
-
       await notifyUser(user._id, "✅ Account reinstated");
       break;
 

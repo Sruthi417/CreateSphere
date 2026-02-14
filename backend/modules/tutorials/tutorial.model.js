@@ -74,11 +74,6 @@ const TutorialSchema = new Schema(
       default: 0,
     },
 
-    moderation: {
-      reason: { type: String, default: null },
-      strikeCount: { type: Number, default: 0 },
-      hiddenUntil: { type: Date, default: null },
-    },
   },
   { timestamps: true }
 );
