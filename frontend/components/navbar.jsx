@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/auth-store';
 import { useUIStore } from '@/store/ui-store';
@@ -24,8 +25,6 @@ import {
   Heart,
   MessageCircle,
   LayoutDashboard,
-  Package,
-  BookOpen,
   LogOut,
   Sun,
   Moon,
@@ -38,7 +37,8 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, user, userRole, logout } = useAuthStore();
-  const { darkMode, toggleDarkMode, mobileMenuOpen, setMobileMenuOpen } = useUIStore();
+  const { theme, setTheme } = useTheme();
+  const { mobileMenuOpen, setMobileMenuOpen } = useUIStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [mounted, setMounted] = useState(false);
 
@@ -119,15 +119,14 @@ export default function Navbar() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={toggleDarkMode}
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                 className="hidden md:flex"
               >
-                {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </Button>
 
               {isAuthenticated ? (
                 <>
-                  {/* User Icons - Hidden for Admin */}
                   {!isAdmin && (
                     <>
                       <Link href="/user/favorites" className="hidden md:block">
@@ -189,17 +188,14 @@ export default function Navbar() {
                               Messages
                             </Link>
                           </DropdownMenuItem>
-
                           <DropdownMenuSeparator />
                           {userRole === 'creator' ? (
-                            <>
-                              <DropdownMenuItem asChild>
-                                <Link href="/creator/dashboard" className="cursor-pointer text-primary font-semibold">
-                                  <LayoutDashboard className="mr-2 h-4 w-4" />
-                                  Creator Dashboard
-                                </Link>
-                              </DropdownMenuItem>
-                            </>
+                            <DropdownMenuItem asChild>
+                              <Link href="/creator/dashboard" className="cursor-pointer text-primary font-semibold">
+                                <LayoutDashboard className="mr-2 h-4 w-4" />
+                                Creator Dashboard
+                              </Link>
+                            </DropdownMenuItem>
                           ) : (
                             <DropdownMenuItem asChild>
                               <Link href="/creator/onboarding" className="cursor-pointer text-primary">
@@ -294,6 +290,29 @@ export default function Navbar() {
                 </Link>
               )}
 
+              {/* Theme Toggle Mobile */}
+              <div className="flex items-center justify-between py-2 border-t pt-4">
+                <span className="text-sm font-medium">Appearance</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="flex items-center gap-2"
+                >
+                  {theme === 'dark' ? (
+                    <>
+                      <Sun className="h-4 w-4" />
+                      Light Mode
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="h-4 w-4" />
+                      Dark Mode
+                    </>
+                  )}
+                </Button>
+              </div>
+
               {!isAuthenticated && (
                 <div className="flex space-x-2 pt-2 border-t">
                   <Link href="/auth/login" className="flex-1">
@@ -316,7 +335,6 @@ export default function Navbar() {
   );
 }
 
-// Minimal Badge for the Admin label in dropdown
 function Badge({ children, className }) {
   return (
     <span className={`inline-flex items-center rounded-full border px-2 py-0.5 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80 ${className}`}>

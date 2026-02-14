@@ -25,7 +25,6 @@ import {
   Edit,
   Trash2,
   RotateCcw,
-  Settings,
   CheckCircle2,
   AlertCircle,
   Loader2,
@@ -272,12 +271,6 @@ export default function CreatorDashboardPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Link href="/creator/settings">
-                <Button variant="outline">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
-                </Button>
-              </Link>
               {!profile?.isBlocked && (
                 cp.isDeactivated ? (
                   <Button onClick={handleReactivate} disabled={actionLoading === 'reactivate'}>

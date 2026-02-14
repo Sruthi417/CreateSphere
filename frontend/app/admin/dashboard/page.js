@@ -409,20 +409,7 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="flex items-center gap-6">
-            <div className="hidden md:flex items-center gap-2 bg-slate-50 rounded-xl px-4 py-2.5 border border-slate-200 focus-within:border-primary/50 transition-all">
-              <Search className="h-4 w-4 text-slate-400" />
-              <input type="text" placeholder="Search everywhere..." className="bg-transparent border-none text-sm focus:outline-none text-slate-600 w-64" />
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="rounded-xl relative hover:bg-slate-100">
-                <Bell className="h-5 w-5 text-slate-500" />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full border-2 border-white" />
-              </Button>
-              <div className="w-px h-6 bg-slate-200 mx-2" />
-              <Button variant="ghost" size="icon" className="rounded-xl hover:bg-slate-100">
-                <Settings className="h-5 w-5 text-slate-500" />
-              </Button>
-            </div>
+            {/* Action buttons removed as requested */}
           </div>
         </header>
 
