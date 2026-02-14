@@ -1,10 +1,11 @@
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
+import { SERVER_URL } from "../config/env.js";
 
 /**
  * Saves base64 image into /uploads/chatbot/<sessionId>/<filename>.png
- * Returns public URL: /uploads/chatbot/<sessionId>/<filename>.png
+ * Returns full public URL: http://localhost:5001/uploads/chatbot/<sessionId>/<filename>.png
  */
 export const saveBase64ToPngUrl = (base64, sessionId) => {
   if (!base64) throw new Error("base64 image required");
@@ -23,7 +24,9 @@ export const saveBase64ToPngUrl = (base64, sessionId) => {
 
   fs.writeFileSync(filepath, buffer);
 
-  return `/uploads/chatbot/${sessionId}/${filename}`;
+  // Return full absolute URL using SERVER_URL from env
+  const baseUrl = SERVER_URL || "http://localhost:5001";
+  return `${baseUrl}/uploads/chatbot/${sessionId}/${filename}`;
 };
 
 /**

@@ -10,7 +10,8 @@ import SmartImage from '@/components/ui/smart-image';
 
 export default function ChatMessage({ message }) {
     const isUser = message.sender === 'user';
-    const hasIdeas = message.ideas && message.ideas.length > 0;
+    const messageIdeas = message.ideas || message.output?.ideas || [];
+    const hasIdeas = messageIdeas && messageIdeas.length > 0;
 
     return (
         <motion.div
@@ -31,21 +32,29 @@ export default function ChatMessage({ message }) {
             px-4 py-3 rounded-2xl text-sm 
             ${isUser ? 'bg-primary text-primary-foreground rounded-br-none' : 'bg-muted/80 text-secondary-foreground rounded-bl-none'}
         `}>
-                    {message.image && (
-                        <SmartImage src={message.image} alt="uploaded" className="mb-2 max-h-48 rounded-lg object-cover bg-black/10 w-full" />
-                    )}
+                    {(() => {
+                        const imgUrl = message.image || message.input?.imageUrl || message.output?.generatedImageUrl;
+                        if (!imgUrl) return null;
+                        return (
+                            <SmartImage
+                                src={imgUrl}
+                                alt="Message visual"
+                                className="mb-2 max-h-48 rounded-lg object-cover bg-black/10 w-full"
+                            />
+                        );
+                    })()}
 
                     {/* Render text/narration. Handles both raw text and output.narration */}
                     <div className="whitespace-pre-wrap leading-relaxed">
                         {(() => {
                             // Extract text with multiple fallbacks
-                            let text = message.text || message.narration || message.output?.narration;
+                            let text = message.text || message.narration || message.output?.narration || message.input?.text;
 
                             // Ensure we never display objects or arrays
                             if (typeof text !== 'string') {
                                 // If text is an object or array, don't display it
                                 if (!isUser && hasIdeas) {
-                                    return `I've generated ${message.ideas.length} creative ${message.ideas.length === 1 ? 'idea' : 'ideas'} for you! Check out the cards below for detailed instructions.`;
+                                    return `I've generated ${messageIdeas.length} creative ${messageIdeas.length === 1 ? 'idea' : 'ideas'} for you! Check out the cards below for detailed instructions.`;
                                 }
                                 return isUser ? '' : 'Here are your craft ideas:';
                             }
@@ -56,14 +65,14 @@ export default function ChatMessage({ message }) {
                             // If the text looks like JSON (starts with { or [), ignore it
                             if (text.startsWith('{') || text.startsWith('[')) {
                                 if (!isUser && hasIdeas) {
-                                    return `I've generated ${message.ideas.length} creative ${message.ideas.length === 1 ? 'idea' : 'ideas'} for you! Check out the cards below for detailed instructions.`;
+                                    return `I've generated ${messageIdeas.length} creative ${messageIdeas.length === 1 ? 'idea' : 'ideas'} for you! Check out the cards below for detailed instructions.`;
                                 }
                                 return '';
                             }
 
                             // If text is empty but we have ideas, provide a default message
                             if (!text && !isUser && hasIdeas) {
-                                return `Great! I've created ${message.ideas.length} unique craft ${message.ideas.length === 1 ? 'idea' : 'ideas'} using your materials. Explore each one below!`;
+                                return `Great! I've created ${messageIdeas.length} unique craft ${messageIdeas.length === 1 ? 'idea' : 'ideas'} using your materials. Explore each one below!`;
                             }
 
                             return text;
@@ -74,7 +83,7 @@ export default function ChatMessage({ message }) {
                 {/* Ideas Grid for AI */}
                 {!isUser && hasIdeas && (
                     <div className="flex flex-row flex-wrap gap-4 mt-2 justify-start">
-                        {message.ideas.map((idea, idx) => (
+                        {messageIdeas.map((idea, idx) => (
                             <IdeaCard key={idea.ideaId || idx} idea={idea} />
                         ))}
                     </div>

@@ -471,7 +471,16 @@ export const generateImage = async (req, res) => {
     // 2) base64 -> png -> url
     const imageUrl = saveBase64ToPngUrl(base64Image, sessionId);
 
-    // 3) store ONLY url in db
+    // 3) Update the image in lastIdeas so it persists on card refresh
+    if (chosenIdea) {
+      session.lastIdeas = (session.lastIdeas || []).map(i =>
+        i.ideaId === chosenIdea.ideaId ? { ...i, generatedImageUrl: imageUrl } : i
+      );
+      // Mark as modified if it's a mixed type/array
+      session.markModified('lastIdeas');
+    }
+
+    // 4) store ONLY url in db
     session.messages.push({
       sender: "ai",
       output: {
