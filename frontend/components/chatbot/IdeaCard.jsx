@@ -45,6 +45,21 @@ export default function IdeaCard({ idea }) {
             // Update the idea in the context state
             setIdeas(prev => prev.map(i => i.ideaId === idea.ideaId ? { ...i, generatedImage: newImageUrl } : i));
 
+            // Also post to chat history
+            const narration = `✨ Here is the visualization for: **${idea.title}**`;
+            setMessages(prev => [...prev, {
+                id: Date.now() + 1,
+                sender: 'ai',
+                type: 'ai',
+                image: newImageUrl,
+                narration,
+                output: {
+                    narration,
+                    generatedImageUrl: newImageUrl,
+                },
+                timestamp: new Date(),
+            }]);
+
             toast.success('Image generated successfully!');
         } catch (err) {
             console.error('Image generation error:', err);
@@ -88,24 +103,31 @@ export default function IdeaCard({ idea }) {
 
     return (
         <>
-            <Card className="w-full min-w-[280px] max-w-[320px] bg-card hover:shadow-lg transition-shadow border-muted">
-                <div className="relative h-40 bg-muted overflow-hidden rounded-t-lg">
-                    <SmartImage
-                        src={generatedImageUrl}
-                        alt={idea.title}
-                        className={`w-full h-full object-cover transition-opacity ${generatedImageUrl ? 'opacity-100' : 'opacity-50 grayscale'}`}
-                    />
-                    <div className="absolute top-2 left-2">
-                        <Badge variant={difficultyColor[idea.difficulty] || 'outline'}>
-                            {idea.difficulty?.toUpperCase()}
-                        </Badge>
+            <Card className="w-full min-w-[280px] max-w-[320px] bg-card hover:shadow-lg transition-shadow border-muted flex flex-col overflow-hidden">
+                {generatedImageUrl && (
+                    <div className="relative h-40 bg-muted overflow-hidden shrink-0 border-b">
+                        <SmartImage
+                            src={generatedImageUrl}
+                            alt={idea.title}
+                            className="w-full h-full object-cover transition-opacity opacity-100"
+                        />
                     </div>
-                </div>
+                )}
 
-                <CardContent className="p-4 flex flex-col gap-3">
+                <CardContent className="p-4 flex flex-col gap-3 flex-1">
                     <div>
-                        <h3 className="font-bold text-lg leading-tight truncate" title={idea.title}>{idea.title}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                        <div className="flex items-start justify-between gap-2 mb-1.5">
+                            <h3 className="font-bold text-lg leading-tight line-clamp-2 flex-1" title={idea.title}>
+                                {idea.title}
+                            </h3>
+                            <Badge
+                                variant={difficultyColor[idea.difficulty] || 'outline'}
+                                className="shrink-0 uppercase text-[10px] font-bold px-2"
+                            >
+                                {idea.difficulty}
+                            </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-3">
                             {idea.narration || idea.description}
                         </p>
                     </div>

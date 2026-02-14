@@ -77,13 +77,12 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [pendingCreators, setPendingCreators] = useState([]);
   const [priorityReports, setPriorityReports] = useState([]);
-  const [reportedCreators, setReportedCreators] = useState([]);
   const [adminsList, setAdminsList] = useState([]);
   const [verifiedCreators, setVerifiedCreators] = useState([]);
   const [actionLoading, setActionLoading] = useState('');
   const [rejectDialog, setRejectDialog] = useState({ open: false, creatorId: '' });
   const [rejectReason, setRejectReason] = useState('');
-  const [banDialog, setBanDialog] = useState({ open: false, targetId: '', targetType: '', targetName: '' });
+  const [banDialog, setBanDialog] = useState({ open: false, targetId: '', targetType: '', targetName: '', action: 'ban' });
   const [banReason, setBanReason] = useState('');
   const [reportDetailsDialog, setReportDetailsDialog] = useState({ open: false, targetId: '', reports: [] });
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -91,11 +90,11 @@ export default function AdminDashboardPage() {
   const [newCategory, setNewCategory] = useState({ name: '', description: '', type: 'both' });
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [categoryLoading, setCategoryLoading] = useState(false);
+  const [reportFilter, setReportFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('reports');
 
   const sidebarItems = [
-    { id: 'reports', label: 'Priority Reports', icon: Flag, count: priorityReports.length },
-    { id: 'creators', label: 'Reported Creators', icon: AlertTriangle, count: reportedCreators.length },
+    { id: 'reports', label: 'Report System', icon: Flag, count: priorityReports.length },
     { id: 'verifications', label: 'Verifications', icon: CheckCircle2, count: pendingCreators.length },
     { id: 'verified', label: 'Verified Creators', icon: BadgeCheck, count: verifiedCreators.length },
     { id: 'admins', label: 'Admins List', icon: ShieldCheck, count: adminsList.length },
@@ -112,18 +111,16 @@ export default function AdminDashboardPage() {
 
   const fetchData = async () => {
     try {
-      const [creatorsRes, verifiedRes, reportsRes, reportedCreatorsRes, adminsRes, categoriesRes] = await Promise.all([
+      const [creatorsRes, verifiedRes, reportsRes, adminsRes, categoriesRes] = await Promise.all([
         adminAPI.getPendingVerifications().catch(() => ({ data: { data: [] } })),
         adminAPI.getVerifiedCreators().catch(() => ({ data: { data: [] } })),
         adminAPI.getPriorityReports().catch(() => ({ data: { data: [] } })),
-        adminAPI.getReportedCreators().catch(() => ({ data: { data: [] } })),
         adminAPI.getAdmins().catch(() => ({ data: { data: [] } })),
         categoryAPI.list().catch(() => ({ data: { data: [] } })),
       ]);
       setPendingCreators(creatorsRes.data.data || []);
       setVerifiedCreators(verifiedRes.data.data || []);
       setPriorityReports(reportsRes.data.data || []);
-      setReportedCreators(reportedCreatorsRes.data.data || []);
       setAdminsList(adminsRes.data.data || []);
       setCategories(categoriesRes.data.data || []);
     } catch (error) {
@@ -231,18 +228,31 @@ export default function AdminDashboardPage() {
       return;
     }
 
-    setActionLoading(`ban-${banDialog.targetId}`);
+    setActionLoading(`${banDialog.action}-${banDialog.targetId}`);
     try {
       await adminAPI.moderateUser(banDialog.targetId, {
-        action: 'ban',
+        action: banDialog.action,
         reason: banReason,
       });
-      toast.success('Account banned successfully');
-      setBanDialog({ open: false, targetId: '', targetType: '', targetName: '' });
+      toast.success(`Account ${banDialog.action === 'ban' ? 'banned' : 'hidden'} successfully`);
+      setBanDialog({ open: false, targetId: '', targetType: '', targetName: '', action: 'ban' });
       setBanReason('');
       fetchData();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to ban account');
+      toast.error(error.response?.data?.message || `Failed to ${banDialog.action} account`);
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+  const handleReinstateAccount = async (targetId) => {
+    setActionLoading(`reinstate-${targetId}`);
+    try {
+      await adminAPI.moderateUser(targetId, { action: 'reinstate' });
+      toast.success('Account restored successfully');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to restore account');
     } finally {
       setActionLoading('');
     }
@@ -419,9 +429,8 @@ export default function AdminDashboardPage() {
         {/* Dynamic Content Region */}
         <main className="flex-1 overflow-y-auto p-10 custom-scrollbar bg-slate-50/50">
           {/* Quick Stats Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
             <StatCard icon={Flag} label="Reports" value={priorityReports.length} color="bg-rose-500" />
-            <StatCard icon={AlertTriangle} label="Reported" value={reportedCreators.length} color="bg-amber-500" />
             <StatCard icon={CheckCircle2} label="Pending" value={pendingCreators.length} color="bg-emerald-500" />
             <StatCard icon={BadgeCheck} label="Verified" value={verifiedCreators.length} color="bg-blue-500" />
             <StatCard icon={ShieldCheck} label="Admins" value={adminsList.length} color="bg-indigo-500" />
@@ -557,224 +566,214 @@ export default function AdminDashboardPage() {
             </TabsContent>
 
             <TabsContent value="reports" className="mt-6">
+              <div className="flex items-center gap-2 mb-6 bg-white p-1 rounded-xl border border-slate-200 w-fit">
+                {[
+                  { id: 'all', label: 'All Reports' },
+                  { id: 'product', label: 'Products' },
+                  { id: 'tutorial', label: 'Tutorials' },
+                  { id: 'creator', label: 'Creators' }
+                ].map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => setReportFilter(f.id)}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${reportFilter === f.id ? 'bg-primary text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+
               {priorityReports.length === 0 ? (
                 <Card>
                   <CardContent className="p-8 text-center">
                     <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                    <p className="text-muted-foreground">No priority reports</p>
+                    <p className="text-muted-foreground">No reports currently in queue</p>
                   </CardContent>
                 </Card>
               ) : (
                 <div className="space-y-4">
-                  {priorityReports.map((report, index) => (
-                    <Card key={index} className={report.content?.moderation?.status === 'banned' ? 'opacity-50 grayscale' : ''}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex gap-4">
-                            {report.content?.image ? (
-                              <img src={getImageUrl(report.content.image)} alt="" className="h-16 w-16 object-cover rounded-lg border" />
-                            ) : report.content?.avatarUrl ? (
-                              <Avatar className="h-16 w-16">
-                                <AvatarImage src={getImageUrl(report.content.avatarUrl)} />
-                                <AvatarFallback>{report.content.name?.charAt(0)}</AvatarFallback>
-                              </Avatar>
-                            ) : (
-                              <div className="h-16 w-16 bg-muted rounded-lg flex items-center justify-center">
-                                <Flag className="h-8 w-8 text-muted-foreground" />
-                              </div>
-                            )}
-                            <div>
-                              <div className="flex items-center gap-2 mb-2">
-                                <Badge variant="destructive" className="capitalize">
-                                  {report._id?.targetType || report.targetType}
-                                </Badge>
-                                <Badge variant="outline">
-                                  {report.count || 1} reports
-                                </Badge>
-                                {report.content?.moderation?.status === 'banned' && (
-                                  <Badge variant="secondary">BANNED</Badge>
+                  {priorityReports
+                    .filter(r => {
+                      if (reportFilter === 'all') return true;
+                      if (reportFilter === 'creator') return ['creator', 'user'].includes(r._id?.targetType || r.targetType);
+                      return (r._id?.targetType || r.targetType) === reportFilter;
+                    })
+                    .map((report, index) => (
+                      <Card key={index} className={report.content?.moderation?.status === 'banned' ? 'opacity-50 grayscale' : ''}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex gap-4">
+                              {report.content?.image ? (
+                                <img src={getImageUrl(report.content.image)} alt="" className="h-16 w-16 object-cover rounded-lg border" />
+                              ) : report.content?.avatarUrl ? (
+                                <Avatar className="h-16 w-16">
+                                  <AvatarImage src={getImageUrl(report.content.avatarUrl)} />
+                                  <AvatarFallback>{report.content.name?.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                              ) : (
+                                <div className="h-16 w-16 bg-muted rounded-lg flex items-center justify-center">
+                                  <Flag className="h-8 w-8 text-muted-foreground" />
+                                </div>
+                              )}
+                              <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Badge variant="destructive" className="capitalize">
+                                    {report._id?.targetType || report.targetType}
+                                  </Badge>
+                                  <Badge variant="outline">
+                                    {report.count || 1} reports
+                                  </Badge>
+                                  {report.content?.moderation?.status === 'banned' && (
+                                    <Badge variant="secondary">BANNED</Badge>
+                                  )}
+                                  {report.content?.moderation?.status === 'hidden' && (
+                                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">HIDDEN</Badge>
+                                  )}
+                                  {report.content?.moderation?.status === 'suspended' && (
+                                    <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200">SUSPENDED</Badge>
+                                  )}
+                                </div>
+                                <h3 className="font-semibold mb-1">
+                                  {report.content?.title || report.content?.name || `Target: ${report._id?.targetId}`}
+                                </h3>
+                                {report.content?.email && (
+                                  <p className="text-xs text-muted-foreground mb-1">{report.content.email}</p>
+                                )}
+                                {report.reasons && (
+                                  <div className="flex gap-1 mt-2 flex-wrap">
+                                    {Array.from(new Set(report.reasons)).slice(0, 3).map((reason, i) => (
+                                      <Badge key={i} variant="secondary" className="text-[10px] py-0">
+                                        {reason}
+                                      </Badge>
+                                    ))}
+                                    {report.reasons.length > 3 && (
+                                      <span className="text-[10px] text-muted-foreground">+{report.reasons.length - 3} more</span>
+                                    )}
+                                  </div>
+                                )}
+                                {report.creator && (['product', 'tutorial'].includes(report._id?.targetType || report.targetType)) && (
+                                  <div className="mt-2 p-2 bg-muted/30 rounded border border-dashed text-xs">
+                                    <span className="text-muted-foreground">Creator: </span>
+                                    <span className="font-medium text-primary">{report.creator.name}</span>
+                                    {report.creator.moderation?.status === 'banned' && (
+                                      <Badge variant="destructive" className="ml-2 h-4 text-[8px] px-1">BANNED</Badge>
+                                    )}
+                                  </div>
                                 )}
                               </div>
-                              <h3 className="font-semibold mb-1">
-                                {report.content?.title || report.content?.name || `Target: ${report._id?.targetId}`}
-                              </h3>
-                              {report.content?.email && (
-                                <p className="text-xs text-muted-foreground mb-1">{report.content.email}</p>
-                              )}
-                              {report.reasons && (
-                                <div className="flex gap-1 mt-2 flex-wrap">
-                                  {Array.from(new Set(report.reasons)).slice(0, 3).map((reason, i) => (
-                                    <Badge key={i} variant="secondary" className="text-[10px] py-0">
-                                      {reason}
-                                    </Badge>
-                                  ))}
-                                  {report.reasons.length > 3 && (
-                                    <span className="text-[10px] text-muted-foreground">+{report.reasons.length - 3} more</span>
-                                  )}
-                                </div>
-                              )}
-                              {report.creator && (['product', 'tutorial'].includes(report._id?.targetType || report.targetType)) && (
-                                <div className="mt-2 p-2 bg-muted/30 rounded border border-dashed text-xs">
-                                  <span className="text-muted-foreground">Creator: </span>
-                                  <span className="font-medium text-primary">{report.creator.name}</span>
-                                  {report.creator.moderation?.status === 'banned' && (
-                                    <Badge variant="destructive" className="ml-2 h-4 text-[8px] px-1">BANNED</Badge>
-                                  )}
-                                </div>
-                              )}
                             </div>
-                          </div>
-                          <div className="flex flex-col gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="w-full"
-                              onClick={() => handleViewReportDetails(report._id?.targetId || report.targetId)}
-                            >
-                              <Eye className="h-4 w-4 mr-1" />
-                              Details
-                            </Button>
+                            <div className="flex flex-col gap-2">
+                              {/* View Creator Profile for Creators, or Product/Tutorial Creator */}
+                              {(['creator', 'user'].includes(report._id?.targetType || report.targetType) || report.creator) && (
+                                <Link href={`/creator/${report.creator?._id || report._id?.targetId || report.targetId}`} target="_blank">
+                                  <Button size="sm" variant="outline" className="w-full">
+                                    <Users className="h-4 w-4 mr-1" />
+                                    View Profile
+                                  </Button>
+                                </Link>
+                              )}
 
-                            {/* Specific Content Ban (Hide) */}
-                            {['product', 'tutorial'].includes(report._id?.targetType || report.targetType) && (
                               <Button
                                 size="sm"
-                                variant={report.content?.status === 'hidden' ? "secondary" : "destructive"}
+                                variant="outline"
                                 className="w-full"
-                                onClick={() => report.content?.status === 'hidden'
-                                  ? handleRestoreContent(report._id?.targetType || report.targetType, report._id?.targetId || report.targetId)
-                                  : setBanDialog({
-                                    open: true,
-                                    targetId: report._id?.targetId || report.targetId,
-                                    targetType: report._id?.targetType || report.targetType,
-                                    targetName: report.content?.title || 'this content'
-                                  })
-                                }
-                                disabled={actionLoading === `hide-${report._id?.targetId || report.targetId}` || actionLoading === `restore-${report._id?.targetId || report.targetId}`}
+                                onClick={() => handleViewReportDetails(report._id?.targetId || report.targetId)}
                               >
-                                {report.content?.status === 'hidden' ? (
-                                  <>
-                                    <RotateCcw className="h-4 w-4 mr-1" />
-                                    Restore Content
-                                  </>
-                                ) : (
-                                  <>
-                                    <EyeOff className="h-4 w-4 mr-1" />
-                                    Ban Content (Hide)
-                                  </>
-                                )}
+                                <Eye className="h-4 w-4 mr-1" />
+                                Details
                               </Button>
-                            )}
 
-                            {/* Allow banning the creator for ANY report type (direct or content-based) */}
-                            {((['creator', 'user'].includes(report._id?.targetType || report.targetType)) || report.creator) &&
-                              (report.content?.moderation?.status !== 'banned' && report.creator?.moderation?.status !== 'banned') && (
+                              {/* Restore Button for Content or Account */}
+                              {(report.content?.status === 'hidden' || report.content?.moderation?.status === 'hidden' || report.content?.moderation?.status === 'suspended') ? (
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  className="w-full bg-green-100 text-green-700 hover:bg-green-200"
+                                  onClick={() => {
+                                    if (['product', 'tutorial'].includes(report._id?.targetType || report.targetType)) {
+                                      handleRestoreContent(report._id?.targetType || report.targetType, report._id?.targetId || report.targetId);
+                                    } else {
+                                      handleReinstateAccount(report._id.targetId);
+                                    }
+                                  }}
+                                  disabled={actionLoading.includes(report._id?.targetId || report.targetId)}
+                                >
+                                  <RotateCcw className="h-4 w-4 mr-1" />
+                                  Restore
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="w-full text-amber-600 border-amber-200 hover:bg-amber-50"
+                                  onClick={() => {
+                                    if (['product', 'tutorial'].includes(report._id?.targetType || report.targetType)) {
+                                      setBanDialog({
+                                        open: true,
+                                        targetId: report._id?.targetId || report.targetId,
+                                        targetType: report._id?.targetType || report.targetType,
+                                        targetName: report.content?.title || 'this content',
+                                        action: 'hide'
+                                      });
+                                    } else {
+                                      setBanDialog({
+                                        open: true,
+                                        targetId: report._id?.targetId || report.targetId,
+                                        targetType: report._id?.targetType || report.targetType,
+                                        targetName: report.content?.name || 'this account',
+                                        action: 'hide'
+                                      });
+                                    }
+                                  }}
+                                  disabled={report.content?.moderation?.status === 'banned' || report.content?.status === 'removed'}
+                                >
+                                  <EyeOff className="h-4 w-4 mr-1" />
+                                  Hide
+                                </Button>
+                              )}
+
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="w-full hover:bg-green-100 hover:text-green-700"
+                                onClick={() => handleDismissReports(report._id?.targetId || report.targetId)}
+                                disabled={actionLoading.includes(report._id?.targetId || report.targetId)}
+                              >
+                                {actionLoading.includes(`dismiss-${report._id?.targetId || report.targetId}`) ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <CheckCircle2 className="h-4 w-4 mr-1" />
+                                )}
+                                Dismiss
+                              </Button>
+
+                              {/* Ban Button - only for accounts or content escalations */}
+                              {report.content?.moderation?.status !== 'banned' && (
                                 <Button
                                   size="sm"
                                   variant="destructive"
-                                  className="w-full opacity-70 hover:opacity-100"
+                                  className="w-full"
                                   onClick={() => setBanDialog({
                                     open: true,
                                     targetId: report.creator?._id || report._id?.targetId || report.targetId,
                                     targetType: report.creator ? 'creator' : (report._id?.targetType || report.targetType),
-                                    targetName: report.creator?.name || report.content?.name || report.content?.title || 'Account'
+                                    targetName: report.creator?.name || report.content?.name || report.content?.title || 'Account',
+                                    action: 'ban'
                                   })}
                                 >
                                   <XCircle className="h-4 w-4 mr-1" />
-                                  Block Creator Account
+                                  Ban Account
                                 </Button>
                               )}
-
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="w-full hover:bg-green-100 hover:text-green-700"
-                              onClick={() => handleDismissReports(report._id?.targetId || report.targetId)}
-                              disabled={actionLoading === `dismiss-${report._id?.targetId || report.targetId}`}
-                            >
-                              {actionLoading === `dismiss-${report._id?.targetId || report.targetId}` ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : (
-                                <CheckCircle2 className="h-4 w-4 mr-1" />
-                              )}
-                              Dismiss
-                            </Button>
+                            </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    ))}
                 </div>
               )}
             </TabsContent>
 
-            <TabsContent value="reported-creators" className="mt-6">
-              {reportedCreators.length === 0 ? (
-                <Card>
-                  <CardContent className="p-8 text-center">
-                    <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                    <p className="text-muted-foreground">No creators currently reported</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-4">
-                  {reportedCreators.map((report) => (
-                    <Card key={report._id.targetId}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-4">
-                          <Avatar className="h-12 w-12 border">
-                            <AvatarImage src={getImageUrl(report.content?.avatarUrl)} />
-                            <AvatarFallback>{report.content?.name?.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold">{report.content?.name}</h3>
-                              <Badge variant="outline">{report.count} Reports</Badge>
-                              {report.content?.moderation?.status === 'banned' && (
-                                <Badge variant="destructive">BANNED</Badge>
-                              )}
-                              {report.content?.creatorProfile?.verified && (
-                                <Badge className="bg-blue-100 text-blue-600 border-blue-200">Verified</Badge>
-                              )}
-                            </div>
-                            <p className="text-sm text-muted-foreground mb-2">{report.content?.email}</p>
-                            <div className="flex gap-4 text-xs text-muted-foreground">
-                              <span>Rating: {report.content?.creatorProfile?.rating?.toFixed(1) || 'N/A'}</span>
-                              <span>Followers: {report.content?.creatorProfile?.followersCount || 0}</span>
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleViewReportDetails(report._id.targetId)}
-                            >
-                              <Eye className="h-4 w-4 mr-1" />
-                              Reports
-                            </Button>
-                            {report.content?.moderation?.status !== 'banned' && (
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => setBanDialog({
-                                  open: true,
-                                  targetId: report._id.targetId,
-                                  targetType: 'creator',
-                                  targetName: report.content?.name
-                                })}
-                              >
-                                <XCircle className="h-4 w-4 mr-1" />
-                                Ban
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
 
             <TabsContent value="admins" className="mt-6">
               <div className="space-y-4">
@@ -913,30 +912,32 @@ export default function AdminDashboardPage() {
       <Dialog open={banDialog.open} onOpenChange={(open) => setBanDialog({ ...banDialog, open })}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Ban Account: {banDialog.targetName}</DialogTitle>
+            <DialogTitle className="capitalize">{banDialog.action} Account: {banDialog.targetName}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to permanently ban this account? This action is irreversible and will hide all associated content.
+              {banDialog.action === 'ban'
+                ? "Are you sure you want to permanently ban this account? This action is irreversible and will hide all associated content."
+                : "This will temporarily hide the creator profile and all their content from public view."}
             </DialogDescription>
           </DialogHeader>
           <Textarea
-            placeholder="Reason for ban..."
+            placeholder={`Reason for ${banDialog.action}...`}
             value={banReason}
             onChange={(e) => setBanReason(e.target.value)}
             rows={4}
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setBanDialog({ open: false, targetId: '', targetType: '', targetName: '' })}>
+            <Button variant="outline" onClick={() => setBanDialog({ open: false, targetId: '', targetType: '', targetName: '', action: 'ban' })}>
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={handleBanAccount}
-              disabled={actionLoading === `ban-${banDialog.targetId}`}
+              disabled={actionLoading === `${banDialog.action}-${banDialog.targetId}`}
             >
-              {actionLoading === `ban-${banDialog.targetId}` && (
+              {actionLoading === `${banDialog.action}-${banDialog.targetId}` && (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               )}
-              Confirm Ban
+              Confirm {banDialog.action}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1035,6 +1036,6 @@ export default function AdminDashboardPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </div >
   );
 }

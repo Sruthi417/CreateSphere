@@ -275,6 +275,12 @@ export const updateProduct = async (req, res) => {
     Object.assign(product, req.body);
 
     if (product.status === "hidden") {
+      if (product.isBlocked) {
+        return res.status(403).json({
+          success: false,
+          message: "This product is blocked by an admin and cannot be reactivated manually."
+        });
+      }
       product.status = "active"; // auto-reactivate if fixed
     }
 

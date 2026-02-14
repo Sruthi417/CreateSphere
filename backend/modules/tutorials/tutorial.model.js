@@ -58,10 +58,20 @@ const TutorialSchema = new Schema(
       index: true,
     },
 
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
+
     visibility: {
       type: String,
       enum: ["public", "private"],
       default: "public",
+    },
+
+    reportsCount: {
+      type: Number,
+      default: 0,
     },
 
     moderation: {

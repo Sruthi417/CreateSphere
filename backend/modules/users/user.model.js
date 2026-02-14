@@ -183,6 +183,11 @@ const UserSchema = new Schema(
       default: false,
     },
 
+    reportsCount: {
+      type: Number,
+      default: 0,
+    },
+
     moderation: {
       status: { type: String, default: "active" },
       strikeCount: { type: Number, default: 0 },

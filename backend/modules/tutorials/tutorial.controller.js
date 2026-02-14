@@ -1,5 +1,6 @@
 import Tutorial from "./tutorial.model.js";
 import User from "../users/user.model.js";
+import { checkAndAutoVerify } from "../../utils/verification.utils.js";
 
 
 /* =========================================================
@@ -26,6 +27,8 @@ export const createTutorial = async (req, res) => {
 
     creator.creatorProfile.tutorials.push(tutorial._id);
     await creator.save();
+
+    await checkAndAutoVerify(creatorId);
 
     return res.status(201).json({
       success: true,
@@ -280,6 +283,12 @@ export const updateTutorial = async (req, res) => {
     Object.assign(tutorial, req.body);
 
     if (tutorial.status === "hidden") {
+      if (tutorial.isBlocked) {
+        return res.status(403).json({
+          success: false,
+          message: "This tutorial is blocked by an admin and cannot be reactivated manually."
+        });
+      }
       tutorial.status = "active";
     }
 

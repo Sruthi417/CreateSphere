@@ -79,6 +79,7 @@ export const completeCreatorSetup = async (req, res) => {
       followersCount: 0,
 
       verified: false,
+      verificationStatus: "none",
       isDeactivated: false,
     };
 

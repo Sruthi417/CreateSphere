@@ -48,9 +48,9 @@ const ProductSchema = new Schema(
     },
 
     shortDescription: {
-       type: String,
-       trim: true,
-       maxlength: 180
+      type: String,
+      trim: true,
+      maxlength: 180
     },
 
     metadata: {
@@ -70,6 +70,11 @@ const ProductSchema = new Schema(
       enum: ["active", "hidden", "removed"],
       default: "active",
       index: true,
+    },
+
+    isBlocked: {
+      type: Boolean,
+      default: false,
     },
 
     visibility: {

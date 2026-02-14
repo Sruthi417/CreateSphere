@@ -15,20 +15,38 @@ import {
 
 /* =========================================================
    ADMIN LOGIN
+   Route: POST /api/admin/login
 ========================================================= */
 export const adminLogin = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const rawEmail = req.body?.email;
+    const password = req.body?.password;
 
-    const admin = await User.findOne({ email, role: "admin" })
-      .select("+password");
+    // Normalize email: DB stores lowercase (schema), so query with lowercase
+    const email = typeof rawEmail === "string" ? rawEmail.trim().toLowerCase() : "";
 
-    if (!admin)
+    console.log("[admin login] request body keys:", Object.keys(req.body || {}));
+    console.log("[admin login] email (normalized):", email ? `${email.substring(0, 3)}...` : "(empty)");
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required"
+      });
+    }
+
+    const admin = await User.findOne({ email, role: "admin" }).select("+password");
+
+    if (!admin) {
+      console.log("[admin login] no user found with email + role admin");
       return res.status(404).json({ success: false, message: "Admin not found" });
+    }
 
     const match = await bcrypt.compare(password, admin.password);
-    if (!match)
-      return res.status(400).json({ success: false, message: "Invalid credentials" });
+    if (!match) {
+      console.log("[admin login] password mismatch for admin:", admin._id);
+      return res.status(401).json({ success: false, message: "Invalid password" });
+    }
 
     const token = jwt.sign(
       { id: admin._id, role: "admin" },
@@ -36,6 +54,7 @@ export const adminLogin = async (req, res) => {
       { expiresIn: "6h" }
     );
 
+    console.log("[admin login] success for:", admin.email);
     return res.status(200).json({
       success: true,
       message: "Login successful",
@@ -49,9 +68,8 @@ export const adminLogin = async (req, res) => {
         }
       }
     });
-
   } catch (error) {
-    console.error("login error:", error);
+    console.error("[admin login] error:", error);
     return res.status(500).json({
       success: false,
       message: "Admin login failed"
@@ -302,6 +320,7 @@ export const adminModerateAccount = async (req, res) => {
 
     return res.status(200).json({
       success: true,
+      data: user,
       moderation: user.moderation
     });
 
@@ -366,7 +385,7 @@ export const dismissReports = async (req, res) => {
 export const listReportedCreators = async (req, res) => {
   try {
     const reportGroups = await Report.aggregate([
-      { $match: { creatorId: { $ne: null } } },
+      { $match: { targetType: { $in: ["creator", "user"] } } },
       {
         $group: {
           _id: "$creatorId",

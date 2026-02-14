@@ -6,21 +6,21 @@ import { findTargetItem, applyModerationStrike } from "../../utils/moderation.ut
 ========================================================= */
 export const submitReport = async (req, res) => {
   try {
-   const { targetId, targetType, reasonCode, additionalNote } = req.body;
-const reporterId = req.user.id;
+    const { targetId, targetType, reasonCode, additionalNote } = req.body;
+    const reporterId = req.user.id;
 
-// Prevent duplicate report by same user
-const existing = await Report.findOne({
-  reporterId,
-  targetId,
-  targetType
-});
+    // Prevent duplicate report by same user
+    const existing = await Report.findOne({
+      reporterId,
+      targetId,
+      targetType
+    });
 
-if (existing)
-  return res.status(400).json({
-    success: false,
-    message: "You have already reported this item"
-  });
+    if (existing)
+      return res.status(400).json({
+        success: false,
+        message: "You have already reported this item"
+      });
 
 
     const target = await findTargetItem(targetId, targetType);
@@ -45,11 +45,21 @@ if (existing)
       additionalNote
     });
 
-    // Count total strikes for this item
+    // Increment reportsCount on the target object
+    target.reportsCount = (target.reportsCount || 0) + 1;
+
+    if (targetType === "creator" || targetType === "user") {
+      if (target.moderation) {
+        target.moderation.strikeCount = (target.moderation.strikeCount || 0) + 1;
+      }
+    }
+
+    // Count total instances in Report collection (as backup/verification)
     const reportCount = await Report.countDocuments({ targetId, targetType });
 
     let action = "stored";
 
+    // Automoderation if threshold reached
     if (reportCount >= 3) {
       action = await applyModerationStrike(
         target,
@@ -57,6 +67,8 @@ if (existing)
         reasonCode
       );
     }
+
+    await target.save();
 
     return res.status(201).json({
       success: true,

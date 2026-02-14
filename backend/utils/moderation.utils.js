@@ -86,6 +86,7 @@ export const applyModerationStrike = async (target, targetType, reasonText) => {
     mod.hiddenUntil = sevenDaysLater;
 
     if (target.status) target.status = "hidden";
+    target.isBlocked = true;
 
     await target.save();
 
@@ -142,10 +143,22 @@ export const applyModerationAction = async ({
       break;
 
 
+    /* Indefinite Hide */
+    case "hide":
+      mod.status = "hidden";
+      mod.lastReason = reason;
+
+      user.isBlocked = true;
+
+      await notifyUser(user._id, "⚠ Your profile has been hidden by an admin — " + reason);
+      break;
+
+
     /* Permanent ban */
     case "ban":
       mod.status = "banned";
       mod.lastReason = reason;
+      user.isBlocked = true;
 
       await notifyUser(user._id, "❌ Your account has been permanently banned");
 
@@ -154,15 +167,13 @@ export const applyModerationAction = async ({
         // hide all creator content
         await Product.updateMany(
           { creatorId: user._id },
-          { status: "hidden" }
+          { status: "hidden", isBlocked: true }
         );
 
         await Tutorial.updateMany(
           { creatorId: user._id },
-          { status: "hidden" }
+          { status: "hidden", isBlocked: true }
         );
-
-        user.creatorProfile.isDeactivated = true;
       }
       break;
 
@@ -172,12 +183,9 @@ export const applyModerationAction = async ({
       mod.status = "active";
       mod.suspendedUntil = null;
       mod.lastReason = null;
+      user.isBlocked = false;
 
       await notifyUser(user._id, "✅ Account reinstated");
-
-      if (user.role === "creator") {
-        user.creatorProfile.isDeactivated = false;
-      }
       break;
 
 

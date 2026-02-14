@@ -131,13 +131,18 @@ export const analyzeChat = async (req, res) => {
 
     await session.save();
 
-    // ✅ detect "new ideas"
+    // ✅ detect "new ideas" or "quantity request"
+    const numMatch = inputText.match(/(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+(ideas|crafts|projects|items|things)/i);
+
     const userWantsNewIdeas =
+      !!numMatch ||
       lower.includes("new ideas") ||
       lower.includes("more ideas") ||
       lower.includes("another") ||
       lower.includes("different ideas") ||
-      lower.includes("generate again");
+      lower.includes("generate again") ||
+      lower.includes("give me") ||
+      lower.includes("show me");
 
     const hasContext =
       (session.materials?.length || 0) > 0 ||
@@ -281,8 +286,17 @@ Return plain text ONLY. No markdown, no JSON, no special formatting.
     }
 
     /* ======================================================
-       Generation mode: generate 3 ideas
+       Generation mode: generate ideas
     ======================================================= */
+    let requestedCount = 3;
+    if (numMatch) {
+      const numStr = numMatch[1].toLowerCase();
+      const numMap = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
+      requestedCount = numMap[numStr] || parseInt(numStr) || 3;
+    }
+    // Compulsory at least 3
+    if (requestedCount < 3) requestedCount = 3;
+
     const ideasResult = await craftModel.generateContent(`
 You are CreateSphere Craft Assistant - a warm, friendly AI that helps people create amazing crafts from recycled materials.
 
@@ -293,35 +307,37 @@ Materials available:
 ${materials.join(", ")}
 
 YOUR TASK:
-Generate AT LEAST 3 creative, useful craft project ideas using ONLY the materials listed above.
+Generate EXACTLY ${requestedCount} creative, useful craft project ideas using ONLY the materials listed above.
+If the user didn't specify a number, generate at least 3.
 
 NARRATION GUIDELINES:
 - Write a warm, natural, and detailed introduction (3-5 sentences)
 - Sound excited and encouraging, like you're chatting with a friend
 - Mention what materials you're using
-- Example: "I'm so excited to show you what we can create with your ${materials.slice(0, 2).join(' and ')}! I've designed three unique projects that range from home decor to practical storage solutions. Each one is special and perfect for different purposes!"
+- Example: "I'm so excited to show you what we can create with your ${materials.slice(0, 2).join(' and ')}! I've designed ${requestedCount} unique projects that range from home decor to practical storage solutions. Each one is special and perfect for different purposes!"
 
 IMPORTANT RULES:
-1. Generate AT LEAST 3 ideas (minimum 3)
-2. Each idea MUST have all required fields
-3. Make each idea unique and creative
-4. Include detailed, step-by-step instructions
-5. Add safety notes where relevant
-6. Create vivid, detailed image prompts
+1. Generate EXACTLY ${requestedCount} ideas.
+2. Each idea MUST have all required fields.
+3. Make each idea unique and creative.
+4. Include detailed, step-by-step instructions.
+5. Add safety notes where relevant.
+6. Create vivid, detailed image prompts for the "Visualize" feature.
+7. Ensure "narration" for each idea acts as a "Short Description" for the card.
 
 Return ONLY valid JSON in this exact format:
 {
-  "narration": "Your warm, friendly 2-3 sentence introduction here",
+  "narration": "Your warm, friendly introduction here",
   "ideas": [
     {
       "ideaId": "idea_1",
       "title": "Creative Project Title",
-      "narration": "Brief description of what this project is and why it's great",
+      "narration": "Detailed short description of what this project is (2-3 sentences)",
       "difficulty": "easy|medium|hard",
       "tools_required": ["tool1", "tool2"],
-      "steps": ["Step 1 description", "Step 2 description", "Step 3 description"],
-      "safety_notes": ["Safety tip 1", "Safety tip 2"],
-      "imagePrompt": "Detailed visual description for image generation"
+      "steps": ["Step 1", "Step 2", "Step 3"],
+      "safety_notes": ["Tip 1", "Tip 2"],
+      "imagePrompt": "A high-quality 3D render/photo prompt of the finished craft, realistic, clean background"
     }
   ]
 }

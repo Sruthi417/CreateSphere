@@ -190,12 +190,60 @@ export default function CreatorDashboardPage() {
   }
 
   const cp = profile?.creatorProfile || creatorProfile || {};
+  const hiddenProducts = products.filter(p => p.status === 'hidden' || p.isBlocked);
+  const hiddenTutorials = tutorials.filter(t => t.status === 'hidden' || t.isBlocked);
+  const hasContentRestriction = hiddenProducts.length > 0 || hiddenTutorials.length > 0;
 
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="flex-1">
         <div className="container px-4 py-8">
+          {/* Moderation Banner */}
+          {profile?.isBlocked && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mb-6"
+            >
+              <div className="bg-rose-50 border border-rose-200 rounded-2xl p-6 flex items-start gap-4">
+                <div className="bg-rose-100 p-2 rounded-xl">
+                  <Shield className="h-6 w-6 text-rose-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-rose-900 font-bold text-lg mb-1">Creator Account Restricted</h3>
+                  <p className="text-rose-700 text-sm">
+                    Your creator profile and all content have been hidden from the public marketplace by an admin.
+                    {profile.moderation?.lastReason && (
+                      <span className="block mt-2 font-medium bg-rose-100/50 p-3 rounded-lg border border-rose-200/50">Reason: {profile.moderation.lastReason}</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {!profile?.isBlocked && hasContentRestriction && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mb-6"
+            >
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 flex items-start gap-4 shadow-sm">
+                <div className="bg-amber-100 p-2 rounded-xl">
+                  <AlertCircle className="h-6 w-6 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-amber-900 font-bold text-lg mb-1">Content Under Review</h3>
+                  <p className="text-amber-700 text-sm">
+                    Some of your items ({hiddenProducts.length} products, {hiddenTutorials.length} tutorials) have been hidden or blocked.
+                    Please review them in the tabs below.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -213,8 +261,11 @@ export default function CreatorDashboardPage() {
                 <div className="flex items-center gap-2">
                   <h1 className="text-2xl font-bold">{cp.displayName || user?.name}</h1>
                   {cp.verified && <CheckCircle2 className="h-5 w-5 text-primary" />}
+                  {profile?.isBlocked && (
+                    <Badge variant="destructive" className="bg-rose-500">BLOCKED</Badge>
+                  )}
                   {cp.isDeactivated && (
-                    <Badge variant="destructive">Deactivated</Badge>
+                    <Badge variant="secondary" className="bg-slate-200 text-slate-700">Deactivated</Badge>
                   )}
                 </div>
                 <p className="text-muted-foreground">{cp.tagline || 'Creator Dashboard'}</p>
@@ -227,16 +278,18 @@ export default function CreatorDashboardPage() {
                   Settings
                 </Button>
               </Link>
-              {cp.isDeactivated ? (
-                <Button onClick={handleReactivate} disabled={actionLoading === 'reactivate'}>
-                  {actionLoading === 'reactivate' && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Reactivate
-                </Button>
-              ) : (
-                <Button variant="destructive" onClick={handleDeactivate} disabled={actionLoading === 'deactivate'}>
-                  {actionLoading === 'deactivate' && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Deactivate
-                </Button>
+              {!profile?.isBlocked && (
+                cp.isDeactivated ? (
+                  <Button onClick={handleReactivate} disabled={actionLoading === 'reactivate'}>
+                    {actionLoading === 'reactivate' && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Reactivate
+                  </Button>
+                ) : (
+                  <Button variant="destructive" onClick={handleDeactivate} disabled={actionLoading === 'deactivate'}>
+                    {actionLoading === 'deactivate' && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Deactivate
+                  </Button>
+                )
               )}
             </div>
           </motion.div>
@@ -346,9 +399,17 @@ export default function CreatorDashboardPage() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <h3 className="font-semibold truncate">{product.title}</h3>
-                                <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
-                                  {product.status}
-                                </Badge>
+                                <div className="flex gap-2">
+                                  {product.status === 'removed' ? (
+                                    <Badge variant="destructive" className="bg-rose-600 font-bold">BANNED</Badge>
+                                  ) : product.status === 'hidden' ? (
+                                    <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200 font-bold">HIDDEN</Badge>
+                                  ) : product.isBlocked ? (
+                                    <Badge variant="destructive" className="bg-rose-500 font-bold">BLOCKED</Badge>
+                                  ) : (
+                                    <Badge variant="default" className="bg-emerald-500 font-bold">ACTIVE</Badge>
+                                  )}
+                                </div>
                               </div>
                               <p className="text-sm text-muted-foreground truncate">
                                 {product.shortDescription || product.description}
@@ -436,9 +497,17 @@ export default function CreatorDashboardPage() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <h3 className="font-semibold truncate">{tutorial.title}</h3>
-                                <Badge variant={tutorial.status === 'active' ? 'default' : 'secondary'}>
-                                  {tutorial.status}
-                                </Badge>
+                                <div className="flex gap-2">
+                                  {tutorial.status === 'removed' ? (
+                                    <Badge variant="destructive" className="bg-rose-600 font-bold">BANNED</Badge>
+                                  ) : tutorial.status === 'hidden' ? (
+                                    <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200 font-bold">HIDDEN</Badge>
+                                  ) : tutorial.isBlocked ? (
+                                    <Badge variant="destructive" className="bg-rose-500 font-bold">BLOCKED</Badge>
+                                  ) : (
+                                    <Badge variant="default" className="bg-emerald-500 font-bold">ACTIVE</Badge>
+                                  )}
+                                </div>
                               </div>
                               <p className="text-sm text-muted-foreground truncate">
                                 {tutorial.description}

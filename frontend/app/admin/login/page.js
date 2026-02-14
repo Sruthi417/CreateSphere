@@ -28,8 +28,14 @@ export default function AdminLoginPage() {
 
   const onSubmit = async (data) => {
     setLoading(true);
+    // Normalize email (backend expects lowercase to match DB)
+    const payload = {
+      email: (data.email || '').trim().toLowerCase(),
+      password: data.password || '',
+    };
+    console.log('[admin login] POST /api/admin/login', { email: payload.email ? `${payload.email.substring(0, 3)}...` : '(empty)' });
     try {
-      const response = await adminAPI.login(data);
+      const response = await adminAPI.login(payload);
       const { token, admin } = response.data.data || response.data;
       
       setAdminToken(token);
