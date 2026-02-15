@@ -14,11 +14,12 @@ export default function ChatbotLauncher() {
     const [isOpen, setIsOpen] = useState(false);
     const [isMaximized, setIsMaximized] = useState(false);
 
-    // Hide launcher if already on the chatbot page
+    // Hide launcher if already on the chatbot page or messaging page
     useEffect(() => {
-        if (pathname === '/chatbot') {
+        const isChat = pathname?.includes('/chat') || pathname?.includes('/chatbot');
+        if (isChat) {
             setIsVisible(false);
-            setIsOpen(false); // Close popup if we navigate to the actual page
+            setIsOpen(false);
         } else {
             setIsVisible(true);
         }

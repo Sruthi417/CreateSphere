@@ -6,15 +6,13 @@ import { useChatStore } from '@/store/chat-store';
 import { chatAPI } from '@/lib/api-client';
 import ConversationCard from './ConversationCard';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Plus, MessageCircle } from 'lucide-react';
+import { Plus, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ConversationList() {
     const { conversations, setConversations } = useChatStore();
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
     const pathname = usePathname();
 
     const fetchConversations = async () => {
@@ -35,10 +33,7 @@ export default function ConversationList() {
         return () => clearInterval(interval);
     }, []);
 
-    const filteredConversations = conversations.filter(c => {
-        const other = c.participants?.find(p => p.name); // simplistic
-        return other?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    });
+
 
     return (
         <div className="flex flex-col h-full bg-background border-r w-full md:w-80 lg:w-96 flex-shrink-0">
@@ -51,15 +46,6 @@ export default function ConversationList() {
                     <Button variant="ghost" size="icon">
                         <Plus className="h-5 w-5" />
                     </Button>
-                </div>
-                <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search messages..."
-                        className="pl-9 bg-muted/50"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
                 </div>
             </div>
 
@@ -74,8 +60,8 @@ export default function ConversationList() {
                             </div>
                         </div>
                     ))
-                ) : filteredConversations.length > 0 ? (
-                    filteredConversations.map(conv => (
+                ) : conversations.length > 0 ? (
+                    conversations.map(conv => (
                         <ConversationCard
                             key={conv._id}
                             conversation={conv}

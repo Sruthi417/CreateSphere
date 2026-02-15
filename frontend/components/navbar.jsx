@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/auth-store';
 import { useUIStore } from '@/store/ui-store';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +17,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
-  Search,
   Menu,
   X,
   User,
@@ -39,20 +37,13 @@ export default function Navbar() {
   const { isAuthenticated, user, userRole, logout } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const { mobileMenuOpen, setMobileMenuOpen } = useUIStore();
-  const [searchQuery, setSearchQuery] = useState('');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/explore/products?q=${encodeURIComponent(searchQuery)}`);
-      setSearchQuery('');
-    }
-  };
+
 
   const handleLogout = () => {
     logout();
@@ -91,25 +82,7 @@ export default function Navbar() {
           </div>
         )}
 
-        {/* Search Bar - Hidden for Admin */}
-        {!isAdmin && (
-          <div className="hidden md:flex relative max-w-sm flex-1 mx-6">
-            {mounted ? (
-              <form onSubmit={handleSearch} className="w-full relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search products, tutorials..."
-                  className="pl-10 w-full"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </form>
-            ) : (
-              <div className="h-10 w-full bg-muted animate-pulse rounded-md" />
-            )}
-          </div>
-        )}
+
 
         {/* Right Section */}
         <div className="flex items-center space-x-4">
@@ -252,31 +225,18 @@ export default function Navbar() {
           >
             <div className="container py-4 px-4 space-y-4">
               {!isAdmin && (
-                <>
-                  <form onSubmit={handleSearch} className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      type="search"
-                      placeholder="Search..."
-                      className="pl-10 w-full"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </form>
-
-                  <div className="space-y-2">
-                    {navLinks.map((link) => (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        className="block py-2 text-sm font-medium"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        {link.label}
-                      </Link>
-                    ))}
-                  </div>
-                </>
+                <div className="space-y-2">
+                  {navLinks.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className="block py-2 text-sm font-medium"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
               )}
 
               {isAdmin && (
