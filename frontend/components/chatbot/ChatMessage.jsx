@@ -21,7 +21,6 @@ export default function ChatMessage({ message }) {
         >
             {!isUser && (
                 <Avatar className="h-8 w-8 mt-1 border">
-                    <AvatarImage src="/bot-avatar.png" />
                     <AvatarFallback className="bg-primary/10 text-primary"><Bot className="h-4 w-4" /></AvatarFallback>
                 </Avatar>
             )}
@@ -92,7 +91,6 @@ export default function ChatMessage({ message }) {
 
             {isUser && (
                 <Avatar className="h-8 w-8 mt-1 border">
-                    <AvatarImage src="/user-avatar.png" />
                     <AvatarFallback className="bg-muted"><User className="h-4 w-4" /></AvatarFallback>
                 </Avatar>
             )}

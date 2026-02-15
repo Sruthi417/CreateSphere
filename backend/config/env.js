@@ -6,12 +6,13 @@ config({
 
 export const {
   PORT,
-  NODE_ENV ,
+  NODE_ENV,
   db_URI,
   SERVER_URL,
   JWT_SECRET,
   JWT_EXPIRY,
   GEMINI_API_KEY,
+  HF_API_KEY,
   EMAIL_USER,
   EMAIL_PASS,
   CLIENT_URL,
