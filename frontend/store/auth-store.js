@@ -14,6 +14,29 @@ export const useAuthStore = create(
       onboardingStatus: 'none',
       adminToken: null,
       isAdminAuthenticated: false,
+      followedCreators: [],
+      favoritedProducts: [],
+
+      setFollowedCreators: (ids) => set({ followedCreators: ids }),
+      setFavoritedProducts: (ids) => set({ favoritedProducts: ids }),
+
+      toggleFollowCreator: (creatorId) => {
+        const { followedCreators } = get();
+        const isFollowing = followedCreators.includes(creatorId);
+        const newList = isFollowing
+          ? followedCreators.filter(id => id !== creatorId)
+          : [...followedCreators, creatorId];
+        set({ followedCreators: newList });
+      },
+
+      toggleFavoriteProduct: (productId) => {
+        const { favoritedProducts } = get();
+        const isFavorited = favoritedProducts.includes(productId);
+        const newList = isFavorited
+          ? favoritedProducts.filter(id => id !== productId)
+          : [...favoritedProducts, productId];
+        set({ favoritedProducts: newList });
+      },
 
       setAuthToken: (token) => {
         if (typeof window !== 'undefined') {
@@ -72,13 +95,13 @@ export const useAuthStore = create(
           authToken: null,
           user: null,
           userRole: null,
-          emailVerified: false,
-          isBlocked: false,
           isAuthenticated: false,
           creatorProfile: null,
           onboardingStatus: 'none',
           adminToken: null,
           isAdminAuthenticated: false,
+          followedCreators: [],
+          favoritedProducts: [],
         });
       },
 
@@ -104,6 +127,8 @@ export const useAuthStore = create(
         userRole: state.userRole,
         adminToken: state.adminToken,
         user: state.user,
+        followedCreators: state.followedCreators,
+        favoritedProducts: state.favoritedProducts,
       }),
     }
   )

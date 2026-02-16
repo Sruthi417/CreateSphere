@@ -16,8 +16,8 @@ import { toast } from 'sonner';
 import ProductImage from '@/components/ui/product-image';
 
 export default function ProductCard({ product, index = 0, isFavorited = false }) {
-  const { isAuthenticated } = useAuthStore();
-  const [favorited, setFavorited] = useState(isFavorited);
+  const { isAuthenticated, favoritedProducts, toggleFavoriteProduct } = useAuthStore();
+  const favorited = favoritedProducts.includes(product._id);
   const [loading, setLoading] = useState(false);
 
   const handleFavorite = async (e) => {
@@ -38,7 +38,7 @@ export default function ProductCard({ product, index = 0, isFavorited = false })
         await userAPI.addFavorite(product._id);
         toast.success('Added to favorites');
       }
-      setFavorited(!favorited);
+      toggleFavoriteProduct(product._id);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update favorites');
     } finally {

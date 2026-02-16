@@ -158,7 +158,7 @@ export default function InputArea() {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="relative bg-background p-4 border-t">
+        <form onSubmit={handleSubmit} className="relative bg-background p-4 border-t w-full md:min-w-[500px]">
             {imagePreview && (
                 <div className="absolute bottom-full left-4 mb-2">
                     <div className="relative inline-block">
@@ -203,7 +203,7 @@ export default function InputArea() {
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Describe your materials or upload an image..."
                     disabled={isLoading}
-                    className="min-h-[44px] max-h-[150px] resize-none py-3"
+                    className="flex-1 min-h-[44px] max-h-[150px] resize-none py-3"
                     rows={1}
                     onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
@@ -218,6 +218,7 @@ export default function InputArea() {
                     onClick={(e) => handleSubmit(e, { forceImage: true })}
                     disabled={isLoading || !input.trim()}
                     variant="secondary"
+                    size="icon"
                     className="shrink-0"
                     title="Generate Image from text"
                 >
@@ -227,6 +228,7 @@ export default function InputArea() {
                 <Button
                     type="submit"
                     disabled={isLoading || (!input.trim() && !imagePreview)}
+                    size="icon"
                     className="shrink-0"
                 >
                     {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}

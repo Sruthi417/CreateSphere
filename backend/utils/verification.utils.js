@@ -24,14 +24,12 @@ export async function checkAndAutoVerify(creatorId) {
     const productIds = await Product.find({ creatorId, status: "active" }).distinct("_id");
     const tutorialIds = await Tutorial.find({ creatorId, status: "active" }).distinct("_id");
 
-    const hasProductWithReview =
-      productIds.length > 0 &&
-      (await Review.exists({ targetType: "product", targetId: { $in: productIds } }));
-    const hasTutorialWithReview =
-      tutorialIds.length > 0 &&
-      (await Review.exists({ targetType: "tutorial", targetId: { $in: tutorialIds } }));
+    const totalActiveContent = productIds.length + tutorialIds.length;
+    const totalReviews = await Review.countDocuments({
+      targetId: { $in: [...productIds, ...tutorialIds] }
+    });
 
-    const isEligible = hasProductWithReview || hasTutorialWithReview;
+    const isEligible = totalActiveContent >= 2 && totalReviews >= 3;
     if (!isEligible) return;
 
     await User.findByIdAndUpdate(creatorId, {

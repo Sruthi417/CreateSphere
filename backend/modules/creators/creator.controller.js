@@ -482,23 +482,21 @@ export const checkVerificationEligibility = async (req, res) => {
   try {
     const creatorId = req.user.id;
 
-    // Count products
-    const productCount = await Product.countDocuments({
-      creatorId,
-      status: 'active'
-    });
+    const productIds = await Product.find({ creatorId, status: 'active' }).distinct('_id');
+    const tutorialIds = await Tutorial.find({ creatorId, status: 'active' }).distinct('_id');
 
-    // Count reviews across all content
+    const productCount = productIds.length;
+    const tutorialCount = tutorialIds.length;
     const reviewCount = await Review.countDocuments({
-      creatorId
+      targetId: { $in: [...productIds, ...tutorialIds] }
     });
 
     const criteria = {
       minProducts: 2,
       minReviews: 3,
-      currentProducts: productCount,
+      currentProducts: productCount + tutorialCount,
       currentReviews: reviewCount,
-      isEligible: productCount >= 2 && reviewCount >= 3
+      isEligible: (productCount + tutorialCount) >= 2 && reviewCount >= 3
     };
 
     return res.status(200).json({
@@ -531,13 +529,18 @@ export const applyForVerification = async (req, res) => {
     }
 
     // Eligibility check
-    const productCount = await Product.countDocuments({ creatorId: user._id, status: 'active' });
-    const reviewCount = await Review.countDocuments({ creatorId: user._id });
+    const productIds = await Product.find({ creatorId: user._id, status: 'active' }).distinct('_id');
+    const tutorialIds = await Tutorial.find({ creatorId: user._id, status: 'active' }).distinct('_id');
 
-    if (productCount < 2 || reviewCount < 3) {
+    const totalContent = productIds.length + tutorialIds.length;
+    const reviewCount = await Review.countDocuments({
+      targetId: { $in: [...productIds, ...tutorialIds] }
+    });
+
+    if (totalContent < 2 || reviewCount < 3) {
       return res.status(400).json({
         success: false,
-        message: "You do not meet the eligibility criteria (2 products, 3 reviews)"
+        message: "You do not meet the eligibility criteria (2 active items, 3 reviews)"
       });
     }
 

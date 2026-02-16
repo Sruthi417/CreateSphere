@@ -15,10 +15,10 @@ import { toast } from 'sonner';
 import { getImageUrl } from '@/lib/utils';
 
 export default function CreatorCard({ creator, index = 0 }) {
-  const { isAuthenticated, user } = useAuthStore();
-  // Initialize following state from creator.isFollowing from API
-  const [following, setFollowing] = useState(creator.isFollowing || false);
-  // Track follower count changes
+  const { isAuthenticated, user, followedCreators, toggleFollowCreator } = useAuthStore();
+  // Initialize following state from global store
+  const following = followedCreators.includes(creator._id);
+  // Track follower count changes locally as it's specific to the UI value
   const [followersCount, setFollowersCount] = useState(creator.creatorProfile?.followersCount || 0);
   const [loading, setLoading] = useState(false);
   const profile = creator.creatorProfile || {};
@@ -48,9 +48,9 @@ export default function CreatorCard({ creator, index = 0 }) {
         toast.success('Following creator');
       }
 
-      // Update state from backend response (single source of truth)
-      const { isFollowing, followersCount: newCount } = response.data.data;
-      setFollowing(isFollowing);
+      // Update global state and local count
+      const { isFollowing: apiFollowing, followersCount: newCount } = response.data.data;
+      toggleFollowCreator(creator._id);
       setFollowersCount(newCount);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update follow status');

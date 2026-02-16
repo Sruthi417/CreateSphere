@@ -31,24 +31,35 @@ import {
   Send,
   Edit2,
   Trash2,
+  Settings,
 } from 'lucide-react';
 import ProductImage from '@/components/ui/product-image';
+import ConfirmDialog from '@/components/modals/confirm-dialog';
 
 export default function ProductDetailPage() {
   const params = useParams();
   const productId = params.id;
 
   const router = useRouter();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, favoritedProducts, toggleFavoriteProduct } = useAuthStore();
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [favorited, setFavorited] = useState(false);
+  const favorited = product ? favoritedProducts.includes(product._id) : false;
   const [reportOpen, setReportOpen] = useState(false);
   const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
   const [editingReview, setEditingReview] = useState(null);
+  const [deleteProductOpen, setDeleteProductOpen] = useState(false);
+  const [deletingProduct, setDeletingProduct] = useState(false);
+  const [deleteReviewOpen, setDeleteReviewOpen] = useState(false);
+  const [reviewToDelete, setReviewToDelete] = useState(null);
+  const reviewFormRef = require('react').useRef(null);
+
+  const isOwner = user && product && (
+    (typeof product.creatorId === 'object' ? product.creatorId._id : product.creatorId) === user._id
+  );
 
   console.log(product);
 
@@ -91,7 +102,7 @@ export default function ProductDetailPage() {
         await userAPI.addFavorite(productId);
         toast.success('Added to favorites');
       }
-      setFavorited(!favorited);
+      toggleFavoriteProduct(productId);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update favorites');
     }
@@ -135,20 +146,44 @@ export default function ProductDetailPage() {
     }
   };
 
-  const handleDeleteReview = async (reviewId) => {
+  const handleDeleteReview = (reviewId) => {
+    setReviewToDelete(reviewId);
+    setDeleteReviewOpen(true);
+  };
+
+  const confirmDeleteReview = async () => {
+    if (!reviewToDelete) return;
     try {
-      await reviewAPI.delete(reviewId);
+      await reviewAPI.delete(reviewToDelete);
       toast.success('Review deleted');
       fetchReviews();
       fetchProduct();
     } catch (error) {
       toast.error('Failed to delete review');
+    } finally {
+      setDeleteReviewOpen(false);
+      setReviewToDelete(null);
     }
   };
 
   const handleEditReview = (review) => {
     setEditingReview(review);
     setNewReview({ rating: review.rating, comment: review.comment || '' });
+    reviewFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  const handleDeleteProduct = async () => {
+    setDeletingProduct(true);
+    try {
+      await productAPI.delete(productId);
+      toast.success('Product deleted successfully');
+      router.push('/creator/dashboard');
+    } catch (error) {
+      toast.error('Failed to delete product');
+    } finally {
+      setDeletingProduct(false);
+      setDeleteProductOpen(false);
+    }
   };
 
   if (loading) {
@@ -297,6 +332,19 @@ export default function ProductDetailPage() {
                 <Button variant="outline" onClick={() => setReportOpen(true)}>
                   <Flag className="h-4 w-4" />
                 </Button>
+                {isOwner && (
+                  <div className="flex gap-2">
+                    <Link href={`/product/${productId}/edit`} className="flex-1">
+                      <Button variant="secondary" className="w-full">
+                        <Edit2 className="h-4 w-4 mr-2" />
+                        Edit Product
+                      </Button>
+                    </Link>
+                    <Button variant="destructive" onClick={() => setDeleteProductOpen(true)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {/* Creator Card */}
@@ -339,7 +387,7 @@ export default function ProductDetailPage() {
 
             {/* Leave Review */}
             {isAuthenticated && (
-              <Card className="mb-8">
+              <Card className="mb-8" ref={reviewFormRef}>
                 <CardHeader>
                   <CardTitle className="text-lg">
                     {editingReview ? 'Edit Your Review' : 'Leave a Review'}
@@ -410,7 +458,7 @@ export default function ProductDetailPage() {
                             <StarRating rating={review.rating || 0} size="sm" />
                           </div>
                         </div>
-                        {user?._id === review.userId && (
+                        {(user?._id === (typeof review.userId === 'object' ? review.userId._id : review.userId) || user?._id === review.user?._id) && (
                           <div className="flex gap-1">
                             <Button
                               variant="ghost"
@@ -451,6 +499,27 @@ export default function ProductDetailPage() {
         targetId={productId}
         targetType="product"
         targetName={product?.title}
+      />
+
+      <ConfirmDialog
+        open={deleteProductOpen}
+        onOpenChange={setDeleteProductOpen}
+        title="Delete Product"
+        description="Are you sure you want to delete this product? This action can be undone from the creator dashboard."
+        confirmText="Delete"
+        variant="destructive"
+        onConfirm={handleDeleteProduct}
+        loading={deletingProduct}
+      />
+
+      <ConfirmDialog
+        open={deleteReviewOpen}
+        onOpenChange={setDeleteReviewOpen}
+        title="Delete Review"
+        description="Are you sure you want to delete your review? This action cannot be undone."
+        confirmText="Delete"
+        variant="destructive"
+        onConfirm={confirmDeleteReview}
       />
     </div>
   );

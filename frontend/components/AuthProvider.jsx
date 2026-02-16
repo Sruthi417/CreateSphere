@@ -56,6 +56,26 @@ export default function AuthProvider({ children }) {
           if (user.creatorProfile) {
             setCreatorProfile(user.creatorProfile);
           }
+
+          // Fetch followed creators and favorited products to sync state
+          try {
+            const [followingRes, favoritesRes] = await Promise.all([
+              userAPI.getFollowing(1, 1000), // Fetch a large enough limit to get all
+              userAPI.getFavorites(1, 1000)
+            ]);
+
+            if (followingRes.data?.data) {
+              const followedIds = followingRes.data.data.map(f => f._id);
+              useAuthStore.getState().setFollowedCreators(followedIds);
+            }
+
+            if (favoritesRes.data?.data) {
+              const favoritedIds = favoritesRes.data.data.map(p => p._id);
+              useAuthStore.getState().setFavoritedProducts(favoritedIds);
+            }
+          } catch (syncError) {
+            console.error('Failed to sync following/favorites:', syncError);
+          }
         }
       } catch (error) {
         // Only log hydration errors, don't wipe session automatically

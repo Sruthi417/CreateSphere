@@ -35,8 +35,9 @@ import {
   ChevronUp,
   Award,
   Circle,
-  Hash
+  Hash,
 } from 'lucide-react';
+import ConfirmDialog from '@/components/modals/confirm-dialog';
 
 export default function TutorialDetailPage() {
   const params = useParams();
@@ -53,6 +54,15 @@ export default function TutorialDetailPage() {
   const [expandedLessons, setExpandedLessons] = useState([0]); // Default first lesson expanded
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrollLoading, setEnrollLoading] = useState(false);
+  const [deleteTutorialOpen, setDeleteTutorialOpen] = useState(false);
+  const [deletingTutorial, setDeletingTutorial] = useState(false);
+  const [deleteReviewOpen, setDeleteReviewOpen] = useState(false);
+  const [reviewToDelete, setReviewToDelete] = useState(null);
+  const reviewFormRef = require('react').useRef(null);
+
+  const isOwner = user && tutorial && (
+    (typeof tutorial.creatorId === 'object' ? tutorial.creatorId._id : tutorial.creatorId) === user._id
+  );
 
   useEffect(() => {
     fetchTutorial();
@@ -128,14 +138,43 @@ export default function TutorialDetailPage() {
     }
   };
 
-  const handleDeleteReview = async (reviewId) => {
+  const handleDeleteReview = (reviewId) => {
+    setReviewToDelete(reviewId);
+    setDeleteReviewOpen(true);
+  };
+
+  const confirmDeleteReview = async () => {
+    if (!reviewToDelete) return;
     try {
-      await reviewAPI.delete(reviewId);
+      await reviewAPI.delete(reviewToDelete);
       toast.success('Review deleted');
       fetchReviews();
       fetchTutorial();
     } catch (error) {
       toast.error('Failed to delete review');
+    } finally {
+      setDeleteReviewOpen(false);
+      setReviewToDelete(null);
+    }
+  };
+
+  const handleEditReview = (review) => {
+    setEditingReview(review);
+    setNewReview({ rating: review.rating, comment: review.comment || '' });
+    reviewFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  const handleDeleteTutorial = async () => {
+    setDeletingTutorial(true);
+    try {
+      await tutorialAPI.delete(tutorialId);
+      toast.success('Course deleted successfully');
+      router.push('/creator/dashboard');
+    } catch (error) {
+      toast.error('Failed to delete course');
+    } finally {
+      setDeletingTutorial(false);
+      setDeleteTutorialOpen(false);
     }
   };
 
@@ -334,7 +373,7 @@ export default function TutorialDetailPage() {
                 </div>
 
                 {isAuthenticated && (
-                  <Card className="mb-10 rounded-3xl shadow-lg border-primary/10 overflow-hidden">
+                  <Card className="mb-10 rounded-3xl shadow-lg border-primary/10 overflow-hidden" ref={reviewFormRef}>
                     <CardHeader className="bg-primary/5 border-b border-primary/10 px-8 py-6">
                       <CardTitle className="text-xl">Your Thoughts</CardTitle>
                       <CardDescription>Share your experience with the community</CardDescription>
@@ -398,9 +437,9 @@ export default function TutorialDetailPage() {
                                 </div>
                               </div>
                             </div>
-                            {user?._id === review.userId && (
+                            {(user?._id === (typeof review.userId === 'object' ? review.userId._id : review.userId) || user?._id === review.user?._id) && (
                               <div className="flex gap-1">
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary" onClick={() => { setEditingReview(review); setNewReview({ rating: review.rating, comment: review.comment || '' }); window.scrollTo({ top: 400, behavior: 'smooth' }); }}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary" onClick={() => handleEditReview(review)}>
                                   <Edit2 className="h-4 w-4" />
                                 </Button>
                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-destructive" onClick={() => handleDeleteReview(review._id)}>
@@ -466,6 +505,25 @@ export default function TutorialDetailPage() {
                         <Flag className="h-5 w-5" />
                       </Button>
                     </div>
+
+                    {isOwner && (
+                      <div className="flex flex-col gap-2 pt-2">
+                        <Link href={`/tutorial/${tutorialId}/edit`} className="w-full">
+                          <Button variant="secondary" className="w-full rounded-2xl py-6 font-bold">
+                            <Edit2 className="h-4 w-4 mr-2" />
+                            Edit Course
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="destructive"
+                          className="w-full rounded-2xl py-6 font-bold"
+                          onClick={() => setDeleteTutorialOpen(true)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Course
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </Card>
 
@@ -486,9 +544,9 @@ export default function TutorialDetailPage() {
                 </Card>
               </div>
             </div>
-          </div>
-        </div>
-      </main>
+          </div >
+        </div >
+      </main >
       <Footer />
 
       <ReportModal
@@ -497,6 +555,27 @@ export default function TutorialDetailPage() {
         targetId={tutorialId}
         targetType="tutorial"
         targetName={tutorial?.title}
+      />
+
+      <ConfirmDialog
+        open={deleteTutorialOpen}
+        onOpenChange={setDeleteTutorialOpen}
+        title="Delete Course"
+        description="Are you sure you want to delete this course? This action can be undone from the creator dashboard."
+        confirmText="Delete"
+        variant="destructive"
+        onConfirm={handleDeleteTutorial}
+        loading={deletingTutorial}
+      />
+
+      <ConfirmDialog
+        open={deleteReviewOpen}
+        onOpenChange={setDeleteReviewOpen}
+        title="Delete Review"
+        description="Are you sure you want to delete your review? This action cannot be undone."
+        confirmText="Delete"
+        variant="destructive"
+        onConfirm={confirmDeleteReview}
       />
     </div>
   );

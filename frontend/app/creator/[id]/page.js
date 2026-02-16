@@ -19,7 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { getImageUrl } from '@/lib/utils';
+import { getImageUrl, getSafeHostname } from '@/lib/utils';
 import {
   Star,
   Users,
@@ -38,12 +38,12 @@ export default function CreatorProfilePage({ params }) {
 
 
   const router = useRouter();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, followedCreators, toggleFollowCreator } = useAuthStore();
   const [creator, setCreator] = useState(null);
   const [products, setProducts] = useState([]);
   const [tutorials, setTutorials] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [following, setFollowing] = useState(false);
+  const following = followedCreators.includes(creatorId);
   const [followLoading, setFollowLoading] = useState(false);
   const [messageLoading, setMessageLoading] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -58,8 +58,6 @@ export default function CreatorProfilePage({ params }) {
       const response = await creatorAPI.getById(creatorId);
       const creatorData = response.data.data;
       setCreator(creatorData);
-      // Initialize following state from API response
-      setFollowing(creatorData.isFollowing || false);
     } catch (error) {
       toast.error('Failed to load creator profile');
       router.push('/explore/creators');
@@ -104,13 +102,12 @@ export default function CreatorProfilePage({ params }) {
       }
 
       // Update state from backend response (single source of truth)
-      const { isFollowing, followersCount: newCount } = response.data.data;
-      setFollowing(isFollowing);
+      const { isFollowing: apiFollowing, followersCount: newCount } = response.data.data;
+      toggleFollowCreator(creatorId);
 
-      // Update creator data with backend values
+      // Update creator data with backend values for display
       setCreator(prev => ({
         ...prev,
-        isFollowing,
         creatorProfile: {
           ...prev.creatorProfile,
           followersCount: newCount
@@ -277,7 +274,7 @@ export default function CreatorProfilePage({ params }) {
                               className="text-primary hover:underline flex items-center gap-1 text-sm"
                             >
                               <ExternalLink className="h-3 w-3" />
-                              {new URL(url).hostname}
+                              {getSafeHostname(url)}
                             </a>
                           ))}
                         </div>

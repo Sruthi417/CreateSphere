@@ -20,3 +20,15 @@ export function getImageUrl(url) {
 
   return url;
 }
+
+export function getSafeHostname(url) {
+  if (!url) return '';
+  try {
+    // Add protocol if missing to prevent "Invalid URL" error
+    const urlWithProtocol = url.match(/^[a-zA-Z]+:\/\//) ? url : `https://${url}`;
+    return new URL(urlWithProtocol).hostname.replace('www.', '');
+  } catch (error) {
+    console.error('URL Parsing Error:', error);
+    return url; // Fallback to raw string if still invalid
+  }
+}

@@ -569,7 +569,7 @@ export default function CreatorDashboardPage() {
                       ? 'bg-green-50 border-green-200 text-green-800'
                       : cp.verificationStatus === 'requested'
                         ? 'bg-blue-50 border-blue-200 text-blue-800'
-                        : cp.verificationStatus === 'revoked'
+                        : cp.verificationStatus === 'revoked' || cp.verificationStatus === 'rejected'
                           ? 'bg-red-50 border-red-200 text-red-800'
                           : 'bg-slate-50 border-slate-200 text-slate-800'
                       }`}>
@@ -589,7 +589,9 @@ export default function CreatorDashboardPage() {
                                 ? 'Verification Pending'
                                 : cp.verificationStatus === 'revoked'
                                   ? 'Verification Revoked'
-                                  : 'Not Verified'}
+                                  : cp.verificationStatus === 'rejected'
+                                    ? 'Verification Rejected'
+                                    : 'Not Verified'}
                           </p>
                           <p className="text-sm opacity-90">
                             {cp.verified
@@ -598,7 +600,9 @@ export default function CreatorDashboardPage() {
                                 ? 'An admin is reviewing your profile.'
                                 : cp.verificationStatus === 'revoked'
                                   ? 'An admin has removed your verification.'
-                                  : 'Complete the requirements below to apply.'}
+                                  : cp.verificationStatus === 'rejected'
+                                    ? (cp.rejectionReason ? `Reason: ${cp.rejectionReason}` : 'An admin has rejected your request.')
+                                    : 'Complete the requirements below to apply.'}
                           </p>
                         </div>
                       </div>
@@ -613,10 +617,10 @@ export default function CreatorDashboardPage() {
                         </h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* Products Requirement */}
+                          {/* Products/Tutorials Requirement */}
                           <div className="p-4 rounded-xl bg-white border shadow-sm">
                             <div className="flex justify-between items-center mb-2">
-                              <span className="text-sm font-medium text-slate-600">Active Products</span>
+                              <span className="text-sm font-medium text-slate-600">Active Items</span>
                               <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${eligibility.currentProducts >= eligibility.minProducts ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
                                 {eligibility.currentProducts} / {eligibility.minProducts}
                               </span>
@@ -627,7 +631,7 @@ export default function CreatorDashboardPage() {
                                 style={{ width: `${Math.min((eligibility.currentProducts / eligibility.minProducts) * 100, 100)}%` }}
                               />
                             </div>
-                            <p className="text-[10px] text-slate-400 mt-2 italic">Upload at least 2 active products to the marketplace.</p>
+                            <p className="text-[10px] text-slate-400 mt-2 italic">Upload at least 2 active products or tutorials to the marketplace.</p>
                           </div>
 
                           {/* Reviews Requirement */}

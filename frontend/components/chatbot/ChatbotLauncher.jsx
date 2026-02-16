@@ -84,7 +84,7 @@ export default function ChatbotLauncher() {
                         className={`fixed z-50 overflow-hidden shadow-2xl bg-background flex flex-col transition-all duration-300
                         ${isMaximized
                                 ? 'w-full h-full inset-0 rounded-none'
-                                : 'w-full h-full inset-0 rounded-none md:w-[400px] md:h-[600px] md:inset-auto md:bottom-24 md:right-6 md:rounded-xl md:border'
+                                : 'w-full h-full inset-0 rounded-none md:w-[450px] md:h-[600px] md:inset-auto md:bottom-24 md:right-6 md:rounded-xl md:border'
                             }`}
                     >
                         <ChatbotContainer
