@@ -164,7 +164,7 @@ const UserSchema = new Schema(
 
     onboardingStatus: {
       type: String,
-      enum: ["none", "creator_pending", "creator_completed"],
+      enum: ["none", "creator_pending", "creator_completed", "admin_completed"],
       default: "none",
       index: true
     },
@@ -179,6 +179,11 @@ const UserSchema = new Schema(
     },
 
     reportsCount: {
+      type: Number,
+      default: 0,
+    },
+
+    totalStrikes: {
       type: Number,
       default: 0,
     },
@@ -213,6 +218,29 @@ const UserSchema = new Schema(
     timestamps: true,
   }
 );
+
+/* -------------------------
+   Pre-save Hook
+-------------------------- */
+UserSchema.pre("save", function () {
+  // If user is an admin, ensure non-essential fields are cleared
+  if (this.role === "admin") {
+    this.creatorProfile = null;
+    this.favoriteProducts = [];
+    this.enrolledTutorials = [];
+    this.following = [];
+
+    // Reset moderation flags/counts for admin
+    this.isBlocked = false;
+    this.reportsCount = 0;
+    this.totalStrikes = 0;
+
+    // Remove legacy/deprecated moderation object if it exists in the document
+    if (this.moderation) {
+      this.moderation = undefined;
+    }
+  }
+});
 
 /* -------------------------
    Indexes for performance

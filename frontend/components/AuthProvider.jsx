@@ -58,15 +58,9 @@ export default function AuthProvider({ children }) {
           }
         }
       } catch (error) {
-        // Token might be expired or invalid
-        // Clear invalid tokens
-        console.log('Auth restoration failed:', error.message);
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('userRole');
-
-        // Reset auth state
-        setAuthToken(null);
+        // Only log hydration errors, don't wipe session automatically
+        // Axios interceptor handles 401 real auth failures
+        console.log('Auth restoration info:', error.message);
       }
     };
 

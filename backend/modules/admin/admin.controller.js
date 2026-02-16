@@ -226,21 +226,21 @@ export const listPriorityReports = async (req, res) => {
         if (p) {
           contentInfo = { title: p.title, image: p.images?.[0], status: p.status };
           // Fetch creator info for this product
-          const u = await User.findById(p.creatorId).select("name email avatarUrl isBlocked reportsCount");
-          if (u) creatorInfo = { name: u.name, email: u.email, avatarUrl: u.avatarUrl, isBlocked: u.isBlocked, reportsCount: u.reportsCount, _id: u._id };
+          const u = await User.findById(p.creatorId).select("name email avatarUrl isBlocked reportsCount totalStrikes");
+          if (u) creatorInfo = { name: u.name, email: u.email, avatarUrl: u.avatarUrl, isBlocked: u.isBlocked, reportsCount: u.reportsCount, totalStrikes: u.totalStrikes, _id: u._id };
         }
       } else if (group._id.targetType === "tutorial") {
         const t = await Tutorial.findById(group._id.targetId).select("title thumbnailUrl status creatorId");
         if (t) {
           contentInfo = { title: t.title, image: t.thumbnailUrl, status: t.status };
           // Fetch creator info for this tutorial
-          const u = await User.findById(t.creatorId).select("name email avatarUrl isBlocked reportsCount");
-          if (u) creatorInfo = { name: u.name, email: u.email, avatarUrl: u.avatarUrl, isBlocked: u.isBlocked, reportsCount: u.reportsCount, _id: u._id };
+          const u = await User.findById(t.creatorId).select("name email avatarUrl isBlocked reportsCount totalStrikes");
+          if (u) creatorInfo = { name: u.name, email: u.email, avatarUrl: u.avatarUrl, isBlocked: u.isBlocked, reportsCount: u.reportsCount, totalStrikes: u.totalStrikes, _id: u._id };
         }
       } else if (["creator", "user"].includes(group._id.targetType)) {
-        const u = await User.findById(group._id.targetId).select("name email avatarUrl isBlocked reportsCount");
+        const u = await User.findById(group._id.targetId).select("name email avatarUrl isBlocked reportsCount totalStrikes");
         if (u) {
-          contentInfo = { name: u.name, email: u.email, avatarUrl: u.avatarUrl, isBlocked: u.isBlocked, reportsCount: u.reportsCount };
+          contentInfo = { name: u.name, email: u.email, avatarUrl: u.avatarUrl, isBlocked: u.isBlocked, reportsCount: u.reportsCount, totalStrikes: u.totalStrikes };
           creatorInfo = contentInfo; // Target IS the creator/user
         }
       }
@@ -339,7 +339,7 @@ export const adminModerateAccount = async (req, res) => {
 export const listAdmins = async (req, res) => {
   try {
     const admins = await User.find({ role: "admin" })
-      .select("name email avatarUrl isBlocked reportsCount adminDetails createdAt")
+      .select("name email avatarUrl isBlocked reportsCount totalStrikes adminDetails createdAt")
       .lean();
 
     return res.status(200).json({
@@ -399,7 +399,7 @@ export const listReportedCreators = async (req, res) => {
     const data = await Promise.all(reportGroups.map(async (group) => {
       // Find the user who is the creator (could be role "creator" or "admin" if an admin was reported)
       const u = await User.findById(group._id)
-        .select("name email avatarUrl isBlocked reportsCount creatorProfile role");
+        .select("name email avatarUrl isBlocked reportsCount totalStrikes creatorProfile role");
 
       if (!u) return null;
 
@@ -414,6 +414,7 @@ export const listReportedCreators = async (req, res) => {
           avatarUrl: u.avatarUrl,
           isBlocked: u.isBlocked,
           reportsCount: u.reportsCount,
+          totalStrikes: u.totalStrikes,
           creatorProfile: u.creatorProfile,
           role: u.role
         }

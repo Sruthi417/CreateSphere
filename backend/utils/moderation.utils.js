@@ -28,60 +28,26 @@ export const findTargetItem = async (id, type) => {
 
 
 /* =======================================================
-   AUTO-MODERATION (Used by REPORT SYSTEM)
-   - Using reportsCount as the strike indicator
-   - Threshold 3 -> auto-hide
+   MODERATION TRACKING (Used by REPORT SYSTEM)
+   - Only records the count and logs the report for admin review
 ======================================================= */
 export const applyModerationStrike = async (target, targetType, reasonText) => {
+  // We simply save the target to ensure the report count increment (handled in controller) is persisted
+  // and send a notification stub. No automatic actions like hiding or blocking.
 
-  const currentStrikes = target.reportsCount || 0;
+  await target.save();
 
-  /* =======================================================
-     CASE 1 — USER / CREATOR REPORTS
-     => ALWAYS admin review (no auto-action)
-  ======================================================= */
-  if (targetType === "creator" || targetType === "user") {
-    await target.save();
+  // Notification for the content owner/creator
+  const ownerId = targetType === "creator" || targetType === "user" ? target._id : target.creatorId;
+
+  if (ownerId) {
     await notifyUser(
-      target._id,
-      "⚠ Your account has been reported and sent to admin review"
+      ownerId,
+      `⚠ An item you own has been reported for: ${reasonText}. This has been sent for admin review.`
     );
-
-    return "admin_review_required";
   }
 
-  /* =======================================================
-     CASE 2 — CONTENT STRIKES (PRODUCT / TUTORIAL)
-  ======================================================= */
-
-  // Strike 1–2 → warning only
-  if (currentStrikes < 3) {
-    await target.save();
-
-    await notifyUser(
-      target.creatorId,
-      `⚠ Warning issued: ${reasonText}`
-    );
-
-    return "warning_only";
-  }
-
-  // Strike 3 → auto-hide content
-  if (currentStrikes >= 3) {
-    if (target.status) target.status = "hidden";
-    target.isBlocked = true;
-
-    await target.save();
-
-    await notifyUser(
-      target.creatorId,
-      "⛔ Your content was automatically hidden due to multiple reports"
-    );
-
-    return "temporarily_hidden";
-  }
-
-  return "stored";
+  return "reported_to_admin";
 };
 
 

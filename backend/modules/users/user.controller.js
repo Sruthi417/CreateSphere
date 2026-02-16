@@ -83,7 +83,7 @@ export const followCreator = async (req, res) => {
 
     // Check if already following - if yes, return success without making changes
     const isAlreadyFollowing = user.following.some(id => id.toString() === creatorId.toString());
-    
+
     if (isAlreadyFollowing) {
       // Already following, return success but don't increment again
       return res.status(200).json({
@@ -135,7 +135,7 @@ export const unfollowCreator = async (req, res) => {
 
     // Check if not following - if true, return success without making changes
     const isFollowing = user.following.some(id => id.toString() === creatorId.toString());
-    
+
     if (!isFollowing) {
       // Not following, return success but don't decrement
       return res.status(200).json({

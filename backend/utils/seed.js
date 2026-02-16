@@ -17,7 +17,15 @@ export const seedAdmin = async () => {
                 password: hashedPassword,
                 role: "admin",
                 emailVerified: true,
-                onboardingStatus: "none",
+                onboardingStatus: "admin_completed",
+                // Explicitly nullify non-admin fields
+                creatorProfile: null,
+                favoriteProducts: [],
+                following: [],
+                enrolledTutorials: [],
+                isBlocked: false,
+                reportsCount: 0,
+                totalStrikes: 0,
                 adminDetails: {
                     isSuperAdmin: true,
                     permissions: ["MANAGE_USERS", "MODERATE_CONTENT", "VIEW_REPORTS"],
@@ -27,10 +35,19 @@ export const seedAdmin = async () => {
             console.log("✅ Default admin user created: admin@gmail.com / admin");
         } else {
             // Force synchronize credentials and role
-            // This fixes the 'Invalid credentials' issue by ensuring the password is a valid hash of 'admin'
             existingAdmin.role = "admin";
             existingAdmin.emailVerified = true;
             existingAdmin.password = hashedPassword;
+            existingAdmin.onboardingStatus = "admin_completed";
+
+            // Cleanup non-admin fields for existing admin
+            existingAdmin.creatorProfile = null;
+            existingAdmin.favoriteProducts = [];
+            existingAdmin.following = [];
+            existingAdmin.enrolledTutorials = [];
+            existingAdmin.isBlocked = false;
+            existingAdmin.reportsCount = 0;
+            existingAdmin.totalStrikes = 0;
 
             if (!existingAdmin.adminDetails) {
                 existingAdmin.adminDetails = {
@@ -41,9 +58,10 @@ export const seedAdmin = async () => {
             }
 
             await existingAdmin.save();
-            console.log("✅ Admin user credentials synchronized: admin@gmail.com / admin");
+            console.log("✅ Admin user credentials synchronized and profile cleaned: admin@gmail.com / admin");
         }
     } catch (error) {
-        console.error("❌ Failed to seed/sync admin user:", error.message);
+        console.error("❌ Failed to seed/sync admin user:", error);
+        if (error.stack) console.error("Stack:", error.stack);
     }
 };

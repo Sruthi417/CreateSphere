@@ -16,10 +16,12 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
-      // Check for adminToken first if we're on an admin route, then fallback to authToken
       const adminToken = localStorage.getItem('adminToken');
       const authToken = localStorage.getItem('authToken');
-      const token = adminToken || authToken;
+
+      // Select the appropriate token based on the API target
+      const isAdminApi = config.url.startsWith('/admin');
+      const token = isAdminApi ? (adminToken || authToken) : authToken;
 
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -36,21 +38,29 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Check if it's a 401 Unauthorized error
     if (error.response?.status === 401) {
       if (typeof window !== 'undefined') {
         const isAdminRoute = window.location.pathname.startsWith('/admin');
+        const isAdminApi = error.config?.url?.startsWith('/admin');
 
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('userRole');
+        // Only clear the relevant token
+        if (isAdminApi || isAdminRoute) {
+          localStorage.removeItem('adminToken');
+        } else {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userRole');
+        }
 
-        // Redirect to appropriate login if not already there
-        if (isAdminRoute) {
-          if (!window.location.pathname.includes('/login')) {
+        // Redirect to appropriate login if not already there and not currently on an auth page
+        const isAuthPage = window.location.pathname.includes('/auth/') || window.location.pathname.includes('/login');
+
+        if (!isAuthPage) {
+          if (isAdminRoute) {
             window.location.href = '/admin/login';
+          } else {
+            window.location.href = '/auth/login';
           }
-        } else if (!window.location.pathname.includes('/auth/')) {
-          window.location.href = '/auth/login';
         }
       }
     }

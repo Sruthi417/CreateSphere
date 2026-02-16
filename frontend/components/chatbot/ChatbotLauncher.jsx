@@ -14,10 +14,15 @@ export default function ChatbotLauncher() {
     const [isOpen, setIsOpen] = useState(false);
     const [isMaximized, setIsMaximized] = useState(false);
 
-    // Hide launcher if already on the chatbot page or messaging page
+    // Hide launcher if on restricted pages (chat, chatbot, auth, admin)
     useEffect(() => {
-        const isChat = pathname?.includes('/chat') || pathname?.includes('/chatbot');
-        if (isChat) {
+        const isRestrictedPath =
+            pathname?.includes('/chat') ||
+            pathname?.includes('/chatbot') ||
+            pathname?.includes('/auth') ||
+            pathname?.includes('/admin');
+
+        if (isRestrictedPath) {
             setIsVisible(false);
             setIsOpen(false);
         } else {

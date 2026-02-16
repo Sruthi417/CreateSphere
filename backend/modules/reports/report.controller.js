@@ -45,22 +45,26 @@ export const submitReport = async (req, res) => {
       additionalNote
     });
 
-    // Increment reportsCount on the target object
+    // Increment reportsCount on the target object (Product/Tutorial/User)
     target.reportsCount = (target.reportsCount || 0) + 1;
+
+    // ✅ Also increment reportsCount on the creator's User account
+    if (creatorId) {
+      const User = (await import("../users/user.model.js")).default;
+      await User.findByIdAndUpdate(creatorId, { $inc: { reportsCount: 1 } });
+    }
 
     // Count total instances in Report collection (as backup/verification)
     const reportCount = await Report.countDocuments({ targetId, targetType });
 
     let action = "stored";
 
-    // Automoderation if threshold reached
-    if (reportCount >= 3) {
-      action = await applyModerationStrike(
-        target,
-        targetType,
-        reasonCode
-      );
-    }
+    // Moderation logging & notification (Auto-hide logic removed)
+    action = await applyModerationStrike(
+      target,
+      targetType,
+      reasonCode
+    );
 
     await target.save();
 
