@@ -52,6 +52,7 @@ export const useAuthStore = create(
       setUser: (user) => {
         set({
           user,
+          isAuthenticated: !!user,
           emailVerified: user?.emailVerified || false,
           isBlocked: user?.isBlocked || false,
           userRole: user?.role || 'user',

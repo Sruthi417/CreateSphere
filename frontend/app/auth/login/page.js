@@ -14,13 +14,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Palette, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Palette, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function LoginPage() {
   const router = useRouter();
   const { setAuthToken, setUser, setUserRole, setCreatorProfile } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [blockMessage, setBlockMessage] = useState('');
 
   const {
     register,
@@ -47,7 +57,14 @@ export default function LoginPage() {
       router.push('/');
     } catch (error) {
       const message = error.response?.data?.message || 'Login failed';
-      toast.error(message);
+      if (message.includes('hidden by admin')) {
+        setBlockMessage('You are hidden by the admin. After further enquiries further actions will be taken.');
+      } else if (message.includes('blocked by admin')) {
+        setBlockMessage('You are banned by admin.');
+      } else {
+        toast.error(message);
+        setBlockMessage('');
+      }
     } finally {
       setLoading(false);
     }
@@ -140,6 +157,25 @@ export default function LoginPage() {
           </Link>
         </p>
       </motion.div>
+
+      <AlertDialog open={!!blockMessage} onOpenChange={(open) => { if (!open) setBlockMessage(''); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              Account Blocked
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base text-foreground mt-2">
+              {blockMessage}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setBlockMessage('')} className="bg-primary text-white">
+              Understood
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

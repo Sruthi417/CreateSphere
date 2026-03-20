@@ -20,8 +20,17 @@ export const adminHideContent = async (req, res) => {
 
     await item.save();
 
+    if (targetType === "creator") {
+      await import("../products/product.model.js").then(({ default: Product }) => {
+        return Product.updateMany({ creatorId: targetId }, { status: "hidden", isBlocked: true });
+      });
+      await import("../tutorials/tutorial.model.js").then(({ default: Tutorial }) => {
+        return Tutorial.updateMany({ creatorId: targetId }, { status: "hidden", isBlocked: true });
+      });
+    }
+
     await notifyUser(
-      item.creatorId,
+      item.creatorId || item._id,
       "⚠ Content was hidden by admin — " + reason
     );
 

@@ -25,6 +25,7 @@ import {
   Edit,
   Trash2,
   RotateCcw,
+  Settings,
   CheckCircle2,
   AlertCircle,
   Loader2,
@@ -189,60 +190,12 @@ export default function CreatorDashboardPage() {
   }
 
   const cp = profile?.creatorProfile || creatorProfile || {};
-  const hiddenProducts = products.filter(p => p.status === 'hidden' || p.isBlocked);
-  const hiddenTutorials = tutorials.filter(t => t.status === 'hidden' || t.isBlocked);
-  const hasContentRestriction = hiddenProducts.length > 0 || hiddenTutorials.length > 0;
 
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="flex-1">
         <div className="container px-4 py-8">
-          {/* Moderation Banner */}
-          {profile?.isBlocked && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              className="mb-6"
-            >
-              <div className="bg-rose-50 border border-rose-200 rounded-2xl p-6 flex items-start gap-4">
-                <div className="bg-rose-100 p-2 rounded-xl">
-                  <Shield className="h-6 w-6 text-rose-600" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-rose-900 font-bold text-lg mb-1">Creator Account Restricted</h3>
-                  <p className="text-rose-700 text-sm">
-                    Your creator profile and all content have been hidden from the public marketplace by an admin.
-                    {profile.moderation?.lastReason && (
-                      <span className="block mt-2 font-medium bg-rose-100/50 p-3 rounded-lg border border-rose-200/50">Reason: {profile.moderation.lastReason}</span>
-                    )}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {!profile?.isBlocked && hasContentRestriction && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              className="mb-6"
-            >
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 flex items-start gap-4 shadow-sm">
-                <div className="bg-amber-100 p-2 rounded-xl">
-                  <AlertCircle className="h-6 w-6 text-amber-600" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-amber-900 font-bold text-lg mb-1">Content Under Review</h3>
-                  <p className="text-amber-700 text-sm">
-                    Some of your items ({hiddenProducts.length} products, {hiddenTutorials.length} tutorials) have been hidden or blocked.
-                    Please review them in the tabs below.
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -260,29 +213,30 @@ export default function CreatorDashboardPage() {
                 <div className="flex items-center gap-2">
                   <h1 className="text-2xl font-bold">{cp.displayName || user?.name}</h1>
                   {cp.verified && <CheckCircle2 className="h-5 w-5 text-primary" />}
-                  {profile?.isBlocked && (
-                    <Badge variant="destructive" className="bg-rose-500">BLOCKED</Badge>
-                  )}
                   {cp.isDeactivated && (
-                    <Badge variant="secondary" className="bg-slate-200 text-slate-700">Deactivated</Badge>
+                    <Badge variant="destructive">Deactivated</Badge>
                   )}
                 </div>
                 <p className="text-muted-foreground">{cp.tagline || 'Creator Dashboard'}</p>
               </div>
             </div>
             <div className="flex gap-2">
-              {!profile?.isBlocked && (
-                cp.isDeactivated ? (
-                  <Button onClick={handleReactivate} disabled={actionLoading === 'reactivate'}>
-                    {actionLoading === 'reactivate' && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                    Reactivate
-                  </Button>
-                ) : (
-                  <Button variant="destructive" onClick={handleDeactivate} disabled={actionLoading === 'deactivate'}>
-                    {actionLoading === 'deactivate' && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                    Deactivate
-                  </Button>
-                )
+              <Link href="/creator/settings">
+                <Button variant="outline">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </Button>
+              </Link>
+              {cp.isDeactivated ? (
+                <Button onClick={handleReactivate} disabled={actionLoading === 'reactivate'}>
+                  {actionLoading === 'reactivate' && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Reactivate
+                </Button>
+              ) : (
+                <Button variant="destructive" onClick={handleDeactivate} disabled={actionLoading === 'deactivate'}>
+                  {actionLoading === 'deactivate' && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Deactivate
+                </Button>
               )}
             </div>
           </motion.div>
@@ -392,17 +346,9 @@ export default function CreatorDashboardPage() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <h3 className="font-semibold truncate">{product.title}</h3>
-                                <div className="flex gap-2">
-                                  {product.status === 'removed' ? (
-                                    <Badge variant="destructive" className="bg-rose-600 font-bold">BANNED</Badge>
-                                  ) : product.status === 'hidden' ? (
-                                    <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200 font-bold">HIDDEN</Badge>
-                                  ) : product.isBlocked ? (
-                                    <Badge variant="destructive" className="bg-rose-500 font-bold">BLOCKED</Badge>
-                                  ) : (
-                                    <Badge variant="default" className="bg-emerald-500 font-bold">ACTIVE</Badge>
-                                  )}
-                                </div>
+                                <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
+                                  {product.status}
+                                </Badge>
                               </div>
                               <p className="text-sm text-muted-foreground truncate">
                                 {product.shortDescription || product.description}
@@ -490,17 +436,9 @@ export default function CreatorDashboardPage() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <h3 className="font-semibold truncate">{tutorial.title}</h3>
-                                <div className="flex gap-2">
-                                  {tutorial.status === 'removed' ? (
-                                    <Badge variant="destructive" className="bg-rose-600 font-bold">BANNED</Badge>
-                                  ) : tutorial.status === 'hidden' ? (
-                                    <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200 font-bold">HIDDEN</Badge>
-                                  ) : tutorial.isBlocked ? (
-                                    <Badge variant="destructive" className="bg-rose-500 font-bold">BLOCKED</Badge>
-                                  ) : (
-                                    <Badge variant="default" className="bg-emerald-500 font-bold">ACTIVE</Badge>
-                                  )}
-                                </div>
+                                <Badge variant={tutorial.status === 'active' ? 'default' : 'secondary'}>
+                                  {tutorial.status}
+                                </Badge>
                               </div>
                               <p className="text-sm text-muted-foreground truncate">
                                 {tutorial.description}
@@ -569,7 +507,7 @@ export default function CreatorDashboardPage() {
                       ? 'bg-green-50 border-green-200 text-green-800'
                       : cp.verificationStatus === 'requested'
                         ? 'bg-blue-50 border-blue-200 text-blue-800'
-                        : cp.verificationStatus === 'revoked' || cp.verificationStatus === 'rejected'
+                        : cp.verificationStatus === 'revoked'
                           ? 'bg-red-50 border-red-200 text-red-800'
                           : 'bg-slate-50 border-slate-200 text-slate-800'
                       }`}>
@@ -589,9 +527,7 @@ export default function CreatorDashboardPage() {
                                 ? 'Verification Pending'
                                 : cp.verificationStatus === 'revoked'
                                   ? 'Verification Revoked'
-                                  : cp.verificationStatus === 'rejected'
-                                    ? 'Verification Rejected'
-                                    : 'Not Verified'}
+                                  : 'Not Verified'}
                           </p>
                           <p className="text-sm opacity-90">
                             {cp.verified
@@ -600,9 +536,7 @@ export default function CreatorDashboardPage() {
                                 ? 'An admin is reviewing your profile.'
                                 : cp.verificationStatus === 'revoked'
                                   ? 'An admin has removed your verification.'
-                                  : cp.verificationStatus === 'rejected'
-                                    ? (cp.rejectionReason ? `Reason: ${cp.rejectionReason}` : 'An admin has rejected your request.')
-                                    : 'Complete the requirements below to apply.'}
+                                  : 'Complete the requirements below to apply.'}
                           </p>
                         </div>
                       </div>
@@ -617,10 +551,10 @@ export default function CreatorDashboardPage() {
                         </h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* Products/Tutorials Requirement */}
+                          {/* Products Requirement */}
                           <div className="p-4 rounded-xl bg-white border shadow-sm">
                             <div className="flex justify-between items-center mb-2">
-                              <span className="text-sm font-medium text-slate-600">Active Items</span>
+                              <span className="text-sm font-medium text-slate-600">Active Products</span>
                               <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${eligibility.currentProducts >= eligibility.minProducts ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
                                 {eligibility.currentProducts} / {eligibility.minProducts}
                               </span>
@@ -631,7 +565,7 @@ export default function CreatorDashboardPage() {
                                 style={{ width: `${Math.min((eligibility.currentProducts / eligibility.minProducts) * 100, 100)}%` }}
                               />
                             </div>
-                            <p className="text-[10px] text-slate-400 mt-2 italic">Upload at least 2 active products or tutorials to the marketplace.</p>
+                            <p className="text-[10px] text-slate-400 mt-2 italic">Upload at least 2 active products to the marketplace.</p>
                           </div>
 
                           {/* Reviews Requirement */}

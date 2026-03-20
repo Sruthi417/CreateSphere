@@ -74,12 +74,12 @@ export const registerUser = async (data) => {
     html: `
       <h2>Welcome to CreateSphere 🎨</h2>
       <p>Please verify your email to activate your account.</p>
-      <a href="${verifyLink}" target="_blank">✅ Verify Email</a>
+      <a href="${verifyLink}" target="_blank"> Verify Email</a>
       <p>This link expires in ${verifyExpiryMinutes} minutes.</p>
     `,
   });
 
-  // ✅ Don’t give JWT before verification (recommended)
+  //  Don’t give JWT before verification (recommended)
   return {
     user: {
       id: user._id,
@@ -184,7 +184,13 @@ export const loginUser = async (email, password) => {
   const user = await User.findOne({ email: normalizedEmail }).select("+password");
 
   if (!user) throw new Error("Invalid email or password");
-  if (user.isBlocked) throw new Error("This account has been blocked by admin");
+  if (user.isBlocked) {
+    if (user.status === "hidden") {
+      throw new Error("This account has been hidden by admin");
+    } else {
+      throw new Error("This account has been blocked by admin");
+    }
+  }
 
   // ✅ must be verified
   if (!user.emailVerified) {

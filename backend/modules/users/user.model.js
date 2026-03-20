@@ -178,6 +178,12 @@ const UserSchema = new Schema(
       default: false,
     },
 
+    status: {
+      type: String,
+      enum: ["active", "hidden", "suspended", "banned", "removed"],
+      default: "active",
+    },
+
     reportsCount: {
       type: Number,
       default: 0,

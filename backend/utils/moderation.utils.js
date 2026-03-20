@@ -74,20 +74,46 @@ export const applyModerationAction = async ({
     /* Suspend account */
     case "suspend":
       user.isBlocked = true;
+      user.status = "suspended";
       await notifyUser(user._id, "⛔ Account suspended — " + reason);
-      break;
+      
+      if (user.role === "creator") {
+        await Product.updateMany(
+          { creatorId: user._id },
+          { status: "hidden", isBlocked: true }
+        );
 
+        await Tutorial.updateMany(
+          { creatorId: user._id },
+          { status: "hidden", isBlocked: true }
+        );
+      }
+      break;
 
     /* Indefinite Hide */
     case "hide":
       user.isBlocked = true;
+      user.status = "hidden";
       await notifyUser(user._id, "⚠ Your profile has been hidden by an admin — " + reason);
+      
+      if (user.role === "creator") {
+        await Product.updateMany(
+          { creatorId: user._id },
+          { status: "hidden", isBlocked: true }
+        );
+
+        await Tutorial.updateMany(
+          { creatorId: user._id },
+          { status: "hidden", isBlocked: true }
+        );
+      }
       break;
 
 
     /* Permanent ban */
     case "ban":
       user.isBlocked = true;
+      user.status = "banned";
       await notifyUser(user._id, "❌ Your account has been permanently banned");
 
       if (user.role === "creator") {
@@ -108,6 +134,7 @@ export const applyModerationAction = async ({
     /* Reinstate */
     case "reinstate":
       user.isBlocked = false;
+      user.status = "active";
       await notifyUser(user._id, "✅ Account reinstated");
       break;
 
