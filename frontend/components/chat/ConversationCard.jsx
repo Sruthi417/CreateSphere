@@ -25,8 +25,8 @@ export default function ConversationCard({ conversation, isSelected }) {
     return (
         <Link href={`/chat/${conversation._id}`} className="block">
             <div className={cn(
-                "p-3 rounded-lg hover:bg-muted transition-colors cursor-pointer",
-                isSelected && "bg-muted"
+                "p-3 rounded-xl hover:bg-primary/5 transition-colors cursor-pointer",
+                isSelected && "bg-primary/10 border-l-2 border-primary"
             )}>
                 <div className="flex items-center gap-3">
                     <div className="relative">
@@ -54,7 +54,7 @@ export default function ConversationCard({ conversation, isSelected }) {
                                 {conversation.lastMessage || 'No messages'}
                             </p>
                             {unreadCount > 0 && (
-                                <Badge variant="destructive" className="h-5 w-5 p-0 flex items-center justify-center rounded-full text-[10px]">
+                                <Badge className="h-5 min-w-5 px-1.5 flex items-center justify-center rounded-full text-[10px] bg-primary text-primary-foreground">
                                     {unreadCount}
                                 </Badge>
                             )}

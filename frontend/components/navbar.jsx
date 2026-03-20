@@ -28,6 +28,7 @@ import {
   Moon,
   Palette,
   ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
 import { getImageUrl } from '@/lib/utils';
 
@@ -38,9 +39,13 @@ export default function Navbar() {
   const { theme, setTheme } = useTheme();
   const { mobileMenuOpen, setMobileMenuOpen } = useUIStore();
   const [mounted, setMounted] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    const handleScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
 
@@ -51,30 +56,50 @@ export default function Navbar() {
   };
 
   const navLinks = [
-    { href: '/explore/products', label: 'Products' },
-    { href: '/explore/tutorials', label: 'Tutorials' },
-    { href: '/explore/creators', label: 'Creators' },
+    { href: '/explore/products', label: 'Market' },
+    { href: '/explore/creators', label: 'Designers' },
+    { href: '/explore/tutorials', label: 'Courses' },
+    { href: '/chatbot', label: 'Meet AI' },
   ];
 
   const isAdmin = userRole === 'admin';
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header
+      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+        scrolled
+          ? 'border-b bg-background/95 backdrop-blur-md shadow-sm supports-[backdrop-filter]:bg-background/80'
+          : 'bg-background border-b border-border/50'
+      }`}
+    >
       <nav className="container flex h-16 items-center justify-between px-4">
         {/* Logo */}
-        <Link href={isAdmin ? "/admin/dashboard" : "/"} className="flex items-center space-x-2">
-          <Palette className="h-6 w-6 text-primary" />
-          <span className="font-bold text-xl">CraftSphere <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded ml-1">{isAdmin ? 'ADMIN' : ''}</span></span>
+        <Link href={isAdmin ? "/admin/dashboard" : "/"} className="flex items-center space-x-2 group">
+          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shadow-sm group-hover:shadow-primary/30 group-hover:-rotate-3 transition-all duration-300">
+            <Palette className="h-4 w-4 text-primary-foreground" />
+          </div>
+          <span className="font-bold text-lg tracking-tight">
+            CraftSphere{' '}
+            {isAdmin && (
+              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full ml-1 font-semibold">
+                ADMIN
+              </span>
+            )}
+          </span>
         </Link>
 
-        {/* Desktop Navigation - Hidden for Admin */}
+        {/* Desktop Navigation */}
         {!isAdmin && (
-          <div className="hidden md:flex items-center space-x-6">
+          <div className="hidden md:flex items-center bg-muted/50 rounded-full px-1 py-1 gap-0.5">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-medium transition-colors hover:text-primary ${pathname === link.href ? 'text-primary' : 'text-muted-foreground'}`}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                  pathname === link.href || pathname?.startsWith(link.href)
+                    ? 'bg-background text-foreground shadow-sm font-semibold'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                }`}
               >
                 {link.label}
               </Link>
@@ -85,7 +110,7 @@ export default function Navbar() {
 
 
         {/* Right Section */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
           {mounted ? (
             <>
               {/* Dark Mode Toggle */}
@@ -93,9 +118,9 @@ export default function Navbar() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="hidden md:flex"
+                className="hidden md:flex h-9 w-9 rounded-full"
               >
-                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </Button>
 
               {isAuthenticated ? (
@@ -103,13 +128,13 @@ export default function Navbar() {
                   {!isAdmin && (
                     <>
                       <Link href="/user/favorites" className="hidden md:block">
-                        <Button variant="ghost" size="icon">
-                          <Heart className="h-5 w-5" />
+                        <Button variant="ghost" size="icon" className="rounded-full h-9 w-9">
+                          <Heart className="h-4 w-4" />
                         </Button>
                       </Link>
                       <Link href="/chat" className="hidden md:block">
-                        <Button variant="ghost" size="icon">
-                          <MessageCircle className="h-5 w-5" />
+                        <Button variant="ghost" size="icon" className="rounded-full h-9 w-9">
+                          <MessageCircle className="h-4 w-4" />
                         </Button>
                       </Link>
                     </>
@@ -117,19 +142,27 @@ export default function Navbar() {
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                        <Avatar className="h-8 w-8">
+                      <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 ring-2 ring-primary/20 hover:ring-primary/50 transition-all">
+                        <Avatar className="h-9 w-9">
                           <AvatarImage src={getImageUrl(user?.avatarUrl)} alt={user?.name} />
-                          <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>
+                          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                            {user?.name?.charAt(0) || 'U'}
+                          </AvatarFallback>
                         </Avatar>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56" align="end" forceMount>
-                      <div className="flex items-center justify-start gap-2 p-2">
-                        <div className="flex flex-col space-y-1 leading-none">
-                          <p className="font-medium">{user?.name}</p>
-                          <p className="text-xs text-muted-foreground">{user?.email}</p>
-                          {isAdmin && <Badge className="w-fit text-[8px] h-3 px-1">ADMINISTRATOR</Badge>}
+                    <DropdownMenuContent className="w-56 rounded-2xl" align="end" forceMount>
+                      <div className="flex items-center justify-start gap-2 p-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={getImageUrl(user?.avatarUrl)} alt={user?.name} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                            {user?.name?.charAt(0) || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col space-y-0.5 leading-none">
+                          <p className="font-semibold text-sm">{user?.name}</p>
+                          <p className="text-xs text-muted-foreground truncate max-w-[140px]">{user?.email}</p>
+                          {isAdmin && <BadgeLabel>ADMINISTRATOR</BadgeLabel>}
                         </div>
                       </div>
                       <DropdownMenuSeparator />
@@ -172,7 +205,7 @@ export default function Navbar() {
                           ) : (
                             <DropdownMenuItem asChild>
                               <Link href="/creator/onboarding" className="cursor-pointer text-primary">
-                                <Palette className="mr-2 h-4 w-4" />
+                                <Sparkles className="mr-2 h-4 w-4" />
                                 Become a Creator
                               </Link>
                             </DropdownMenuItem>
@@ -181,7 +214,7 @@ export default function Navbar() {
                       )}
 
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
+                      <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
                         <LogOut className="mr-2 h-4 w-4" />
                         Log out
                       </DropdownMenuItem>
@@ -191,22 +224,22 @@ export default function Navbar() {
               ) : (
                 <div className="hidden md:flex items-center space-x-2">
                   <Link href="/auth/login">
-                    <Button variant="ghost">Log in</Button>
+                    <Button variant="ghost" className="rounded-full text-sm font-medium">Log in</Button>
                   </Link>
                   <Link href="/auth/signup">
-                    <Button>Sign up</Button>
+                    <Button className="rounded-full text-sm font-medium shadow-md shadow-primary/20">Sign up</Button>
                   </Link>
                 </div>
               )}
             </>
           ) : (
-            <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+            <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
           )}
 
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="md:hidden rounded-full"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -221,16 +254,20 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t bg-background"
+            className="md:hidden border-t bg-background/95 backdrop-blur-md"
           >
             <div className="container py-4 px-4 space-y-4">
               {!isAdmin && (
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {navLinks.map((link) => (
                     <Link
                       key={link.href}
                       href={link.href}
-                      className="block py-2 text-sm font-medium"
+                      className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                        pathname === link.href || pathname?.startsWith(link.href)
+                          ? 'bg-primary/10 text-primary font-semibold'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       {link.label}
@@ -242,7 +279,7 @@ export default function Navbar() {
               {isAdmin && (
                 <Link
                   href="/admin/dashboard"
-                  className="block py-2 text-sm font-bold text-primary"
+                  className="block px-4 py-2.5 rounded-xl text-sm font-bold text-primary bg-primary/10"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <ShieldCheck className="h-4 w-4 inline mr-2" />
@@ -251,13 +288,13 @@ export default function Navbar() {
               )}
 
               {/* Theme Toggle Mobile */}
-              <div className="flex items-center justify-between py-2 border-t pt-4">
+              <div className="flex items-center justify-between px-4 py-2 rounded-xl bg-muted/50">
                 <span className="text-sm font-medium">Appearance</span>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 rounded-full"
                 >
                   {theme === 'dark' ? (
                     <>
@@ -274,14 +311,14 @@ export default function Navbar() {
               </div>
 
               {!isAuthenticated && (
-                <div className="flex space-x-2 pt-2 border-t">
+                <div className="flex space-x-2 pt-1">
                   <Link href="/auth/login" className="flex-1">
-                    <Button variant="outline" className="w-full" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full rounded-full" onClick={() => setMobileMenuOpen(false)}>
                       Log in
                     </Button>
                   </Link>
                   <Link href="/auth/signup" className="flex-1">
-                    <Button className="w-full" onClick={() => setMobileMenuOpen(false)}>
+                    <Button className="w-full rounded-full" onClick={() => setMobileMenuOpen(false)}>
                       Sign up
                     </Button>
                   </Link>
@@ -295,9 +332,9 @@ export default function Navbar() {
   );
 }
 
-function Badge({ children, className }) {
+function BadgeLabel({ children, className }) {
   return (
-    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80 ${className}`}>
+    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-bold transition-colors border-transparent bg-primary text-primary-foreground ${className}`}>
       {children}
     </span>
   );

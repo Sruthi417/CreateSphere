@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Bot } from 'lucide-react';
+import { Bot, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import ChatbotContainer from './ChatbotContainer';
@@ -35,31 +35,29 @@ export default function ChatbotLauncher() {
     return (
         <ChatbotProvider>
             <AnimatePresence mode="wait">
-                {/* Launcher Button */}
+                {/* Launcher Button - Pill style matching reference "Meet Crafty" button */}
                 {!isOpen && isVisible && (
                     <motion.div
                         key="launcher"
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0, opacity: 0 }}
-                        className="fixed bottom-6 right-6 z-50 group pointer-events-auto"
+                        initial={{ scale: 0, opacity: 0, y: 20 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0, opacity: 0, y: 20 }}
+                        className="fixed bottom-6 right-6 z-50 pointer-events-auto"
                     >
                         <Button
-                            size="icon"
                             onClick={() => setIsOpen(true)}
-                            className="h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90 hover:scale-110 transition-all duration-300 relative overflow-visible"
+                            className="h-12 px-5 rounded-full shadow-xl bg-primary hover:bg-primary/90 hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 group"
                         >
-                            <div className="absolute -top-1 -right-1">
-                                <span className="relative flex h-3 w-3">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
-                                </span>
+                            {/* Animated sparkle indicator */}
+                            <div className="relative">
+                                <Sparkles className="h-4 w-4 text-primary-foreground" />
                             </div>
-                            <Bot className="h-7 w-7 text-primary-foreground" />
+                            <span className="font-semibold text-sm text-primary-foreground">Meet Crafty</span>
 
-                            {/* Tooltip */}
-                            <span className="absolute right-full mr-4 bg-foreground text-background text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                                Ask AI Assistant
+                            {/* Live dot */}
+                            <span className="relative flex h-2 w-2 ml-0.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-300 opacity-75" />
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
                             </span>
                         </Button>
                     </motion.div>
@@ -84,7 +82,7 @@ export default function ChatbotLauncher() {
                         className={`fixed z-50 overflow-hidden shadow-2xl bg-background flex flex-col transition-all duration-300
                         ${isMaximized
                                 ? 'w-full h-full inset-0 rounded-none'
-                                : 'w-full h-full inset-0 rounded-none md:w-[450px] md:h-[600px] md:inset-auto md:bottom-24 md:right-6 md:rounded-xl md:border'
+                                : 'w-full h-full inset-0 rounded-none md:w-[450px] md:h-[600px] md:inset-auto md:bottom-24 md:right-6 md:rounded-2xl md:border border-primary/20'
                             }`}
                     >
                         <ChatbotContainer
