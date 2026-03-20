@@ -473,6 +473,12 @@ export default function AdminDashboardPage() {
                             </div>
                           </div>
                           <div className="flex gap-2">
+                            <Link href={`/creator/${creator._id}`} target="_blank">
+                              <Button size="sm" variant="outline">
+                                <Users className="h-4 w-4 mr-1" />
+                                View Profile
+                              </Button>
+                            </Link>
                             <Button
                               size="sm"
                               onClick={() => handleVerifyCreator(creator._id)}
@@ -558,7 +564,8 @@ export default function AdminDashboardPage() {
                   { id: 'all', label: 'All Reports' },
                   { id: 'product', label: 'Products' },
                   { id: 'tutorial', label: 'Tutorials' },
-                  { id: 'creator', label: 'Creators' }
+                  { id: 'creator', label: 'Creators' },
+                  { id: 'user', label: 'Users' }
                 ].map((f) => (
                   <button
                     key={f.id}
@@ -582,7 +589,6 @@ export default function AdminDashboardPage() {
                   {priorityReports
                     .filter(r => {
                       if (reportFilter === 'all') return true;
-                      if (reportFilter === 'creator') return ['creator', 'user'].includes(r._id?.targetType || r.targetType);
                       return (r._id?.targetType || r.targetType) === reportFilter;
                     })
                     .map((report, index) => (

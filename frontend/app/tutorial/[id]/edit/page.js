@@ -21,7 +21,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { BookOpen, Plus, X, Loader2, ArrowLeft, GripVertical, ListOrdered, Hash, Image as ImageIcon, Save } from 'lucide-react';
+import { BookOpen, Plus, X, Loader2, ArrowLeft, GripVertical, ListOrdered, Hash, Image as ImageIcon, Save, Youtube, Play } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import TutorialThumbnailUpload from '@/components/tutorial-thumbnail-upload.jsx';
@@ -95,7 +95,8 @@ export default function EditTutorialPage() {
                 categoryId: typeof tutorial.categoryId === 'object' ? tutorial.categoryId._id : tutorial.categoryId,
                 type: tutorial.type || 'course',
                 difficulty: tutorial.difficulty || 'medium',
-                lessons: tutorial.lessons || [{ title: '', topics: [{ title: '' }] }]
+                videoUrl: tutorial.videoUrl || '',
+                lessons: tutorial.lessons || [{ title: '', topics: [{ title: '', videoUrl: '' }] }]
             });
 
             setTags(tutorial.tags || []);
@@ -216,6 +217,18 @@ export default function EditTutorialPage() {
                                                 <ImageIcon className="h-4 w-4" /> Course Thumbnail *
                                             </Label>
                                             <TutorialThumbnailUpload thumbnailUrl={thumbnailUrl} setThumbnailUrl={setThumbnailUrl} />
+                                        </div>
+ 
+                                        <div className="space-y-2 md:col-span-2">
+                                            <Label htmlFor="videoUrl" className="text-base flex items-center gap-2">
+                                                <Youtube className="h-4 w-4 text-red-500" /> Course Preview YouTube Link
+                                            </Label>
+                                            <Input
+                                                id="videoUrl"
+                                                placeholder="https://www.youtube.com/watch?v=..."
+                                                {...register('videoUrl')}
+                                            />
+                                            <p className="text-xs text-muted-foreground italic">Add a YouTube URL to show a video preview of your course.</p>
                                         </div>
 
                                         <div className="space-y-2">
@@ -387,14 +400,22 @@ function TopicsList({ lessonIndex, control, register }) {
                         exit={{ opacity: 0, height: 0 }}
                         className="flex items-center gap-2"
                     >
-                        <GripVertical className="h-4 w-4 text-muted-foreground/30 shrink-0" />
-                        <div className="flex-1">
-                            <Input
-                                placeholder="Topic title..."
-                                className="h-10 text-sm bg-muted/20 border-muted-foreground/10"
-                                {...register(`lessons.${lessonIndex}.topics.${topicIndex}.title`, { required: true })}
-                            />
-                        </div>
+                                <GripVertical className="h-4 w-4 text-muted-foreground/30 shrink-0" />
+                                <div className="flex-1 flex gap-2">
+                                    <Input
+                                        placeholder="Topic title..."
+                                        className="h-10 text-sm bg-muted/20 border-muted-foreground/10 flex-[2]"
+                                        {...register(`lessons.${lessonIndex}.topics.${topicIndex}.title`, { required: true })}
+                                    />
+                                    <div className="relative flex-1">
+                                        <Youtube className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
+                                        <Input
+                                            placeholder="YouTube Link (optional)"
+                                            className="h-10 text-xs bg-muted/20 border-muted-foreground/10 pl-8"
+                                            {...register(`lessons.${lessonIndex}.topics.${topicIndex}.videoUrl`)}
+                                        />
+                                    </div>
+                                </div>
                         {topicFields.length > 1 && (
                             <Button
                                 type="button"

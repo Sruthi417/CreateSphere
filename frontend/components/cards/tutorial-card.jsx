@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Clock, BarChart2, PlayCircle, FileText, BookOpen } from 'lucide-react';
 import SmartImage from '@/components/ui/smart-image';
 import StarRating from '@/components/star-rating';
@@ -22,6 +23,12 @@ export default function TutorialCard({ tutorial, index = 0 }) {
 
   const TypeIcon = typeIcons[tutorial.type] || BookOpen;
 
+  const creator =
+    tutorial?.creatorId && typeof tutorial.creatorId === 'object' ? tutorial.creatorId : null;
+  const creatorAvatarUrl = creator?.avatarUrl || null;
+  const creatorDisplayName =
+    creator?.creatorProfile?.displayName || creator?.name || 'Creator';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -30,12 +37,24 @@ export default function TutorialCard({ tutorial, index = 0 }) {
     >
       <Link href={`/tutorial/${tutorial._id}`}>
         <Card className="group overflow-hidden h-full hover:shadow-xl transition-all duration-300 cursor-pointer border-none shadow-sm bg-white">
-          <div className="relative aspect-video overflow-hidden bg-muted">
-            <SmartImage
-              src={tutorial.thumbnailUrl}
-              alt={tutorial.title}
-              className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
-            />
+          <div className="relative aspect-square w-full">
+            <div className="absolute inset-0 overflow-hidden bg-muted">
+              <SmartImage
+                src={tutorial.thumbnailUrl}
+                alt={tutorial.title}
+                className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+            {creator && (
+              <div className="absolute left-4 -bottom-6 z-10">
+                <Avatar className="h-12 w-12 border-4 border-white bg-white shadow-sm">
+                  {creatorAvatarUrl ? (
+                    <AvatarImage src={creatorAvatarUrl} alt={creatorDisplayName} />
+                  ) : null}
+                  <AvatarFallback>{creatorDisplayName?.charAt(0) || 'C'}</AvatarFallback>
+                </Avatar>
+              </div>
+            )}
             <div className="absolute top-3 left-3 flex gap-2">
               <Badge className="bg-white/90 backdrop-blur-sm text-primary border-none hover:bg-white flex items-center gap-1 shadow-sm">
                 <TypeIcon className="h-3 w-3" />

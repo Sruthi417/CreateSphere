@@ -20,6 +20,12 @@ export default function ProductCard({ product, index = 0, isFavorited = false })
   const favorited = favoritedProducts.includes(product._id);
   const [loading, setLoading] = useState(false);
 
+  const creator =
+    product?.creatorId && typeof product.creatorId === 'object' ? product.creatorId : null;
+  const creatorAvatarUrl = creator?.avatarUrl || null;
+  const creatorDisplayName =
+    creator?.creatorProfile?.displayName || creator?.name || 'Creator';
+
   const handleFavorite = async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -54,13 +60,25 @@ export default function ProductCard({ product, index = 0, isFavorited = false })
     >
       <Link href={`/product/${product._id}`}>
         <Card className="group overflow-hidden h-full hover:shadow-lg transition-all duration-300 cursor-pointer">
-          <div className="relative aspect-square w-full overflow-hidden bg-muted">
-            <ProductImage
-              src={product.images?.[0]}
-              alt={product.title}
-              fill
-              className="group-hover:scale-105 transition-transform duration-300"
-            />
+          <div className="relative aspect-square w-full">
+            <div className="absolute inset-0 overflow-hidden bg-muted">
+              <ProductImage
+                src={product.images?.[0]}
+                alt={product.title}
+                fill
+                className="group-hover:scale-105 transition-transform duration-300"
+              />
+            </div>
+            {creator && (
+              <div className="absolute left-4 -bottom-6 z-10">
+                <Avatar className="h-12 w-12 border-4 border-white bg-white shadow-sm">
+                  {creatorAvatarUrl ? (
+                    <AvatarImage src={creatorAvatarUrl} alt={creatorDisplayName} />
+                  ) : null}
+                  <AvatarFallback>{creatorDisplayName?.charAt(0) || 'C'}</AvatarFallback>
+                </Avatar>
+              </div>
+            )}
             <Button
               variant="secondary"
               size="icon"

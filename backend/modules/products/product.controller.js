@@ -103,6 +103,7 @@ export const listAllProducts = async (req, res) => {
       .sort(sort)
       .skip(skip)
       .limit(limit)
+      .populate("creatorId", "name avatarUrl creatorProfile")
       .select(
         "title images creatorId categoryId averageRating reviewsCount isCustomizable createdAt shortDescription description"
       ).lean();
@@ -156,6 +157,7 @@ export const listProductsByCategory = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
+      .populate("creatorId", "name avatarUrl creatorProfile")
       .select(
         "title images creatorId averageRating reviewsCount isCustomizable createdAt"
       ).lean();
@@ -404,6 +406,7 @@ export const searchProducts = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
+      .populate("creatorId", "name avatarUrl creatorProfile")
       .select(
         "title images creatorId averageRating reviewsCount isCustomizable createdAt"
       ).lean();

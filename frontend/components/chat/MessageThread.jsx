@@ -8,12 +8,20 @@ import ChatHeader from './ChatHeader';
 import MessageBubble from './MessageBubble';
 import ChatInput from './ChatInput';
 import { toast } from 'sonner';
+import ReportModal from '@/components/modals/report-modal';
 
 export default function MessageThread({ conversationId }) {
     const { user } = useAuthStore();
     const { messages, setMessages, addMessage, currentConversation, setCurrentConversation } = useChatStore();
     const bottomRef = useRef(null);
     const [loading, setLoading] = useState(true);
+    const [reportTarget, setReportTarget] = useState(null);
+    const [reportModalOpen, setReportModalOpen] = useState(false);
+
+    const handleReportRequest = (targetId, targetName) => {
+        setReportTarget({ id: targetId, name: targetName });
+        setReportModalOpen(true);
+    };
 
     // Poll for messages
     useEffect(() => {
@@ -72,7 +80,11 @@ export default function MessageThread({ conversationId }) {
 
     return (
         <div className="flex flex-col h-full bg-background w-full">
-            <ChatHeader participant={otherParticipant} onlineStatus="offline" />
+            <ChatHeader 
+                participant={otherParticipant} 
+                onlineStatus="offline" 
+                onReport={() => handleReportRequest(otherParticipant?._id, otherParticipant?.name)}
+            />
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/10">
                 {messages.map((msg, idx) => (
@@ -81,12 +93,23 @@ export default function MessageThread({ conversationId }) {
                         message={msg}
                         isOwn={msg.senderId === user?._id}
                         sender={msg.senderId === user?._id ? user : otherParticipant}
+                        onReport={() => handleReportRequest(otherParticipant?._id, otherParticipant?.name)}
                     />
                 ))}
                 <div ref={bottomRef} className="h-1" />
             </div>
 
             <ChatInput onSend={handleSend} />
+
+            {reportTarget && (
+                <ReportModal
+                    open={reportModalOpen}
+                    onOpenChange={setReportModalOpen}
+                    targetId={reportTarget.id}
+                    targetType="user"
+                    targetName={reportTarget.name}
+                />
+            )}
         </div>
     );
 }

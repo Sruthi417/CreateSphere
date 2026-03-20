@@ -153,20 +153,20 @@ export default function HomePage() {
                 className="flex flex-col sm:flex-row gap-4 justify-center"
               >
                 <Link href="/explore/products">
-                  <Button size="lg" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full sm:w-auto shadow-none hover:shadow-none">
                     Explore Marketplace
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
                 {!isAuthenticated ? (
                   <Link href="/auth/signup">
-                    <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                    <Button size="lg" variant="outline" className="w-full sm:w-auto shadow-none hover:shadow-none">
                       Start Creating
                     </Button>
                   </Link>
                 ) : (
                   <Link href="/creator/onboarding">
-                    <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                    <Button size="lg" variant="outline" className="w-full sm:w-auto shadow-none hover:shadow-none">
                       Become a Creator
                     </Button>
                   </Link>
@@ -318,7 +318,7 @@ export default function HomePage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/auth/signup">
-                  <Button size="lg" variant="secondary">
+                  <Button size="lg" variant="secondary" className="shadow-none hover:shadow-none">
                     Get Started Free
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -327,7 +327,7 @@ export default function HomePage() {
                   <Button
                     size="lg"
                     variant="secondary"
-                    className="w-full sm:w-auto bg-white text-primary hover:bg-white/90 shadow-[0_0_15px_rgba(255,255,255,0.3)] border-0"
+                    className="w-full sm:w-auto bg-white text-primary hover:bg-white/90 shadow-none hover:shadow-none border-0"
                   >
                     Try AI Assistant
                     <Bot className="ml-2 h-4 w-4" />

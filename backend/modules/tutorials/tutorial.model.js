@@ -30,6 +30,7 @@ const TutorialSchema = new Schema(
     title: { type: String, required: true, trim: true },
     description: { type: String, trim: true },
     thumbnailUrl: { type: String, default: "" },
+    videoUrl: { type: String, default: "" }, // Course Trailer/Preview
     tags: [{ type: String, trim: true }],
 
     lessons: [LessonSchema],

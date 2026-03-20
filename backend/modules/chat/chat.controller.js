@@ -118,10 +118,14 @@ export const getMessages = async (req, res) => {
     convo.unreadCounts.set(userId, 0);
     await convo.save();
 
+    // Populate conversation for frontend context
+    const populatedConvo = await Conversation.findById(conversationId).populate("participants", "name avatarUrl role");
+
     return res.status(200).json({
       success: true,
       count: messages.length,
-      data: messages
+      data: messages,
+      conversation: populatedConvo
     });
 
   } catch {

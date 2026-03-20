@@ -25,8 +25,16 @@ export const createReview = async (req, res) => {
 
     if (!item)
       return res.status(404).json({ success: false, message: "Target not found" });
-
-
+ 
+    // Prevent creators from reviewing their own products/tutorials
+    const creatorId = typeof item.creatorId === 'object' ? item.creatorId._id : item.creatorId;
+    if (creatorId && creatorId.toString() === userId) {
+      return res.status(403).json({
+        success: false,
+        message: "You cannot review your own content"
+      });
+    }
+ 
     // user may create comment OR rating OR both
     const review = await Review.create({
       userId,

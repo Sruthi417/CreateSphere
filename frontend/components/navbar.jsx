@@ -59,7 +59,6 @@ export default function Navbar() {
     { href: '/explore/products', label: 'Market' },
     { href: '/explore/creators', label: 'Designers' },
     { href: '/explore/tutorials', label: 'Courses' },
-    { href: '/chatbot', label: 'Meet AI' },
   ];
 
   const isAdmin = userRole === 'admin';
@@ -227,7 +226,7 @@ export default function Navbar() {
                     <Button variant="ghost" className="rounded-full text-sm font-medium">Log in</Button>
                   </Link>
                   <Link href="/auth/signup">
-                    <Button className="rounded-full text-sm font-medium shadow-md shadow-primary/20">Sign up</Button>
+                    <Button className="rounded-full text-sm font-medium shadow-none hover:shadow-none">Sign up</Button>
                   </Link>
                 </div>
               )}

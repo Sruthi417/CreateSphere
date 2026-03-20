@@ -18,7 +18,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { getImageUrl } from '@/lib/utils';
+import { getImageUrl, cn } from '@/lib/utils';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Clock,
   BookOpen,
@@ -58,6 +64,8 @@ export default function TutorialDetailPage() {
   const [deletingTutorial, setDeletingTutorial] = useState(false);
   const [deleteReviewOpen, setDeleteReviewOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState(null);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [activeVideo, setActiveVideo] = useState({ url: '', title: '' });
   const reviewFormRef = require('react').useRef(null);
 
   const isOwner = user && tutorial && (
@@ -200,6 +208,39 @@ export default function TutorialDetailPage() {
     }
   };
 
+  const getYouTubeId = (url) => {
+    if (!url) return null;
+    const trimmedUrl = url.trim();
+    // Standard formats
+    const standardRegExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/|live\/)([^#&?]*).*/;
+    const match = trimmedUrl.match(standardRegExp);
+    if (match && match[2].length === 11) {
+      return match[2];
+    }
+    
+    // Fallback for direct IDs or other patterns
+    const idRegExp = /^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/|shorts\/|live\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/;
+    const idMatch = trimmedUrl.match(idRegExp);
+    if (idMatch && idMatch[1].length === 11) {
+      return idMatch[1];
+    }
+
+    // Last resort: simple 11 char check if everything else fails but it looks like a path
+    if (trimmedUrl.length === 11) return trimmedUrl;
+    
+    return null;
+  };
+
+  const openVideo = (url, title) => {
+    const videoId = getYouTubeId(url);
+    if (!videoId) {
+      toast.error("Invalid YouTube link");
+      return;
+    }
+    setActiveVideo({ url: `https://www.youtube.com/embed/${videoId}?autoplay=1`, title });
+    setVideoModalOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -298,11 +339,15 @@ export default function TutorialDetailPage() {
                       <BookOpen className="h-20 w-20 text-slate-300" />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                    <div className="h-20 w-20 rounded-full bg-white/90 flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform cursor-pointer backdrop-blur-sm">
-                      <Play className="h-8 w-8 text-primary fill-primary ml-1" />
+                    <div 
+                      className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center"
+                      onClick={() => tutorial.videoUrl && openVideo(tutorial.videoUrl, tutorial.title)}
+                    >
+                      <div className="h-20 w-20 rounded-full bg-white/90 flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform cursor-pointer backdrop-blur-sm relative overflow-hidden">
+                         <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors" />
+                         <Play className="h-8 w-8 text-primary fill-primary ml-1 relative z-10" />
+                      </div>
                     </div>
-                  </div>
                 </div>
               </motion.div>
             </div>
@@ -347,15 +392,32 @@ export default function TutorialDetailPage() {
                           >
                             <div className="px-6 pb-6 pt-2 border-t space-y-3">
                               {lesson.topics?.map((topic, tIdx) => (
-                                <div key={tIdx} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 group border border-transparent hover:border-slate-100 transition-all">
-                                  <div className="flex items-center gap-3">
-                                    <Circle className="h-3 w-3 text-primary/40 group-hover:text-primary transition-colors fill-primary/10" />
-                                    <span className="text-slate-700 font-medium">{topic.title}</span>
+                                  <div
+                                    key={tIdx}
+                                    className={cn(
+                                      "flex items-center justify-between p-3 rounded-xl transition-all border border-transparent",
+                                      topic.videoUrl ? "hover:bg-primary/5 cursor-pointer hover:border-primary/20 group/topic" : "hover:bg-slate-50 opacity-80"
+                                    )}
+                                    onClick={() => topic.videoUrl && openVideo(topic.videoUrl, topic.title)}
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      {topic.videoUrl ? (
+                                        <Play className="h-3.5 w-3.5 text-primary fill-primary/20 group-hover/topic:fill-primary/40 transition-all" />
+                                      ) : (
+                                        <Circle className="h-3 w-3 text-slate-300" />
+                                      )}
+                                      <span className={cn("text-sm font-medium", topic.videoUrl ? "text-slate-700 font-bold" : "text-slate-400")}>{topic.title}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      {topic.videoUrl ? (
+                                        <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[9px] h-5 px-1.5 uppercase font-bold tracking-tight">
+                                          <Play className="h-2.5 w-2.5 mr-1 fill-primary" /> Topic Video
+                                        </Badge>
+                                      ) : (
+                                        <span className="text-[10px] text-muted-foreground italic px-2">Lecture</span>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded-md font-bold text-slate-500">VIDEO READY</span>
-                                  </div>
-                                </div>
                               ))}
                             </div>
                           </motion.div>
@@ -372,7 +434,7 @@ export default function TutorialDetailPage() {
                   <h2 className="text-3xl font-bold">Learner Feedback</h2>
                 </div>
 
-                {isAuthenticated && (
+                {isAuthenticated && !isOwner && (
                   <Card className="mb-10 rounded-3xl shadow-lg border-primary/10 overflow-hidden" ref={reviewFormRef}>
                     <CardHeader className="bg-primary/5 border-b border-primary/10 px-8 py-6">
                       <CardTitle className="text-xl">Your Thoughts</CardTitle>
@@ -577,6 +639,35 @@ export default function TutorialDetailPage() {
         variant="destructive"
         onConfirm={confirmDeleteReview}
       />
+
+      {/* Video Player Modal */}
+      <Dialog open={videoModalOpen} onOpenChange={setVideoModalOpen}>
+        <DialogContent className="sm:max-w-[1000px] p-0 overflow-hidden bg-black border-none ring-0">
+          <DialogTitle className="sr-only">Video Player: {activeVideo.title}</DialogTitle>
+          <div className="aspect-video w-full bg-black">
+            {activeVideo.url && (
+              <iframe
+                src={activeVideo.url}
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                title="YouTube video player"
+              ></iframe>
+            )}
+          </div>
+          <div className="p-4 bg-slate-900 flex items-center justify-between">
+            <h3 className="text-white font-medium truncate pr-4">{activeVideo.title}</h3>
+            <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-slate-400 hover:text-white"
+                onClick={() => setVideoModalOpen(false)}
+            >
+                Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

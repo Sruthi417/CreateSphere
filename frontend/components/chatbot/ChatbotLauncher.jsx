@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Bot, Sparkles } from 'lucide-react';
+import { Bot } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import ChatbotContainer from './ChatbotContainer';
@@ -48,11 +48,8 @@ export default function ChatbotLauncher() {
                             onClick={() => setIsOpen(true)}
                             className="h-12 px-5 rounded-full shadow-xl bg-primary hover:bg-primary/90 hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 group"
                         >
-                            {/* Animated sparkle indicator */}
-                            <div className="relative">
-                                <Sparkles className="h-4 w-4 text-primary-foreground" />
-                            </div>
-                            <span className="font-semibold text-sm text-primary-foreground">Meet Crafty</span>
+                            {/* Robo icon */}
+                            <Bot className="h-5 w-5 text-primary-foreground" />
 
                             {/* Live dot */}
                             <span className="relative flex h-2 w-2 ml-0.5">

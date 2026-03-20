@@ -385,8 +385,8 @@ export default function ProductDetailPage() {
           <div className="border-t pt-8">
             <h2 className="text-2xl font-bold mb-6">Reviews</h2>
 
-            {/* Leave Review */}
-            {isAuthenticated && (
+            {/* Leave Review - Only for authenticated non-owners */}
+            {isAuthenticated && !isOwner && (
               <Card className="mb-8" ref={reviewFormRef}>
                 <CardHeader>
                   <CardTitle className="text-lg">
