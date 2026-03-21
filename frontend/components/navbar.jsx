@@ -65,19 +65,20 @@ export default function Navbar() {
   const isAdmin = userRole === 'admin';
 
   return (
-    <header
-      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-        scrolled
-          ? 'border-b bg-background/95 backdrop-blur-md shadow-sm supports-[backdrop-filter]:bg-background/80'
-          : 'bg-background border-b border-border/50'
-      }`}
-    >
-      <nav className="container flex h-16 items-center justify-between px-4">
+    <div className="w-full flex justify-center sticky top-4 z-50 px-4">
+      <header
+        className={`w-full max-w-[1380px] transition-all duration-300 rounded-[16px] ${
+          scrolled
+            ? 'bg-background/95 backdrop-blur-md shadow-lg border border-border/50 supports-[backdrop-filter]:bg-background/80'
+            : 'bg-white/90 dark:bg-slate-900/90 shadow-sm border border-border/20 backdrop-blur-sm'
+        }`}
+      >
+        <nav className="flex h-16 items-center justify-between px-6">
         {/* Logo */}
         <Link href={isAdmin ? "/admin/dashboard" : "/"} className="flex items-center space-x-2 group">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shadow-sm group-hover:shadow-primary/30 group-hover:-rotate-3 transition-all duration-300">
+          {/* <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shadow-sm group-hover:shadow-primary/30 group-hover:-rotate-3 transition-all duration-300">
             <Palette className="h-4 w-4 text-primary-foreground" />
-          </div>
+          </div> */}
           <span className="font-bold text-lg tracking-tight">
             CraftSphere{' '}
             {isAdmin && (
@@ -245,9 +246,7 @@ export default function Navbar() {
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
-      </nav>
-
-      {/* Mobile Menu */}
+        </nav>      {/* Mobile Menu */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
@@ -329,6 +328,7 @@ export default function Navbar() {
         )}
       </AnimatePresence>
     </header>
+    </div>
   );
 }
 

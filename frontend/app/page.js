@@ -22,6 +22,7 @@ import {
   Heart,
   MessageCircle,
   Bot,
+  Play,
 } from 'lucide-react';
 
 const fadeInUp = {
@@ -114,66 +115,65 @@ export default function HomePage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/10" />
-          <div className="container relative px-4 py-24 md:py-32 lg:py-40">
+        <section className="relative w-full h-[105vh] flex flex-col items-center justify-center overflow-hidden -mt-[88px]">
+          {/* Full-screen Looping Video Background */}
+          <div className="absolute inset-0 z-0 h-full w-full overflow-hidden">
+            <video 
+              autoPlay 
+              loop 
+              muted 
+              playsInline 
+              className="w-full h-full object-cover pointer-events-none"
+            >
+              <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260228_065522_522e2295-ba22-457e-8fdb-fbcd68109c73.mp4" type="video/mp4" />
+            </video>
+          </div>
+          
+          <div className="relative z-10 w-full max-w-5xl mx-auto px-4 text-center flex flex-col items-center justify-center pt-10">
             <motion.div
               initial="initial"
               animate="animate"
               variants={stagger}
-              className="max-w-3xl mx-auto text-center"
+              className="flex flex-col items-center w-full"
             >
-              <motion.div variants={fadeInUp}>
-                <Badge variant="outline" className="mb-4 px-4 py-1">
-                  <Sparkles className="h-3 w-3 mr-1" />
-                  Welcome to the Creative Marketplace
-                </Badge>
-              </motion.div>
-              <motion.h1
-                variants={fadeInUp}
-                className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6"
-              >
-                Where Creativity
-                <span className="text-primary"> Meets </span>
-                Community
+              <motion.h1 variants={fadeInUp} className="flex flex-col items-center justify-center w-full">
+                <span 
+                  className="font-semibold text-3xl md:text-5xl lg:text-7xl text-white tracking-[-2px] md:tracking-[-4px] leading-tight drop-shadow-lg"
+                  style={{ fontFamily: "'Barlow', sans-serif" }}
+                >
+                  Platform that makes your
+                </span>
+                <span 
+                  className="italic text-white text-[56px] md:text-[84px] leading-[0.9] mt-2 font-normal drop-shadow-2xl"
+                  style={{ fontFamily: "'Instrument Serif', serif" }}
+                >
+                  creativity & crafts viral
+                </span>
               </motion.h1>
-              <motion.p
-                variants={fadeInUp}
-                className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto"
+
+              <motion.p 
+                variants={fadeInUp} 
+                className="font-medium text-white/90 text-[18px] md:text-xl mt-8 max-w-2xl text-center drop-shadow-md"
+                style={{ fontFamily: "'Barlow', sans-serif" }}
               >
-                Discover unique handmade creations, learn new crafting skills, and connect with
-                passionate artisans from around the world.
+                A creative marketplace & DIY platform for Artisans, Creators and Brands
               </motion.p>
-              <motion.div
-                variants={fadeInUp}
-                className="flex flex-col sm:flex-row gap-4 justify-center"
-              >
+
+              <motion.div variants={fadeInUp} className="mt-8 mb-8 flex flex-col sm:flex-row items-center gap-4">
                 <Link href="/explore/products">
-                  <Button size="lg" className="w-full sm:w-auto shadow-none hover:shadow-none">
-                    Explore Marketplace
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                  <Button size="lg" className="bg-white hover:bg-white/90 text-black rounded-full px-8 py-7 text-lg font-bold shadow-2xl flex items-center gap-3 transition-transform hover:scale-105 active:scale-95 group border-none">
+                    Explore Market
                   </Button>
                 </Link>
-                {!isAuthenticated ? (
-                  <Link href="/auth/signup">
-                    <Button size="lg" variant="outline" className="w-full sm:w-auto shadow-none hover:shadow-none">
-                      Start Creating
-                    </Button>
-                  </Link>
-                ) : (
-                  <Link href="/creator/onboarding">
-                    <Button size="lg" variant="outline" className="w-full sm:w-auto shadow-none hover:shadow-none">
-                      Become a Creator
-                    </Button>
-                  </Link>
-                )}
+
+                <Link href={!isAuthenticated ? "/auth/signup" : "/creator/onboarding"}>
+                  <Button size="lg" className="bg-[#1b1b1b] hover:bg-[#2b2b2b] text-white rounded-full px-8 py-7 text-lg font-bold shadow-2xl flex items-center transition-transform hover:scale-105 active:scale-95 border border-white/10 hover:border-white/20">
+                    Become a Creator
+                  </Button>
+                </Link>
               </motion.div>
             </motion.div>
           </div>
-
-          {/* Decorative Elements */}
-          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
         </section>
 
         {/* Features Section */}
