@@ -45,7 +45,7 @@ productRouter.get("/creator/:creatorId", listCreatorProducts);
 //
 
 // My products (includes hidden/removed)
-productRouter.get("/me/list", authMiddleware, requireRole("creator"), listMyProducts);
+productRouter.get("/me/list", authMiddleware, listMyProducts);
 
 
 //

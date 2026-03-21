@@ -367,14 +367,14 @@ export default function ProductDetailPage() {
                         )}
                       </div>
                       <p className="text-sm text-slate-500 font-medium">
-                         {product.creatorId?.creatorProfile?.rating || 0} creator Rating
+                        {product.creatorId?.creatorProfile?.rating || 0} creator Rating
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="w-full h-px bg-slate-100" />
-                  
-                  <Link 
+
+                  <Link
                     href={`/creator/${typeof product.creatorId === 'object' ? product.creatorId._id : product.creatorId}`}
                     className="w-full py-4 text-center text-primary font-bold hover:bg-slate-50 transition-colors"
                   >

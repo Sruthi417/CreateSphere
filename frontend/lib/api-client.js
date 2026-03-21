@@ -110,7 +110,7 @@ export const chatAPI = {
   getConversations: () => axiosInstance.get('/chat/conversations'),
   openConversation: (userId) => axiosInstance.post(`/chat/open/${userId}`),
   getMessages: (conversationId, page = 1, limit = 50) => axiosInstance.get(`/chat/${conversationId}?page=${page}&limit=${limit}`),
-  sendMessage: (conversationId, message) => axiosInstance.post(`/chat/${conversationId}`, { text: message }),
+  sendMessage: (conversationId, text, attachmentUrl) => axiosInstance.post(`/chat/${conversationId}`, { text, attachmentUrl }),
 };
 
 // Chatbot API

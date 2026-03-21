@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { Check, CheckCheck, Flag } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getImageUrl } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth-store';
 import { Button } from '@/components/ui/button';
 
@@ -25,10 +25,25 @@ export default function MessageBubble({ message, isOwn, sender, onReport }) {
             )}>
                 <div className="flex items-start gap-2 max-w-full">
                     <div className={cn(
-                        "px-4 py-2 rounded-2xl text-sm break-words",
-                        isOwn ? "bg-primary text-primary-foreground rounded-br-none" : "bg-muted text-foreground rounded-bl-none"
+                        "rounded-2xl text-sm break-words overflow-hidden",
+                        isOwn ? "bg-primary text-primary-foreground rounded-br-none" : "bg-muted text-foreground rounded-bl-none",
+                        message.attachmentUrl ? "p-1" : "px-4 py-2"
                     )}>
-                        {message.text}
+                        {message.attachmentUrl && (
+                            <div className="mb-1 rounded-xl overflow-hidden max-w-sm">
+                                <img 
+                                    src={getImageUrl(message.attachmentUrl)} 
+                                    alt="Message attachment" 
+                                    className="w-full h-auto object-contain cursor-pointer transition-transform hover:scale-[1.02]"
+                                    onClick={() => window.open(getImageUrl(message.attachmentUrl), '_blank')}
+                                />
+                            </div>
+                        )}
+                        {message.text && (
+                            <div className={message.attachmentUrl ? "px-3 py-1.5" : ""}>
+                                {message.text}
+                            </div>
+                        )}
                     </div>
 
                     {!isOwn && userRole === 'creator' && (

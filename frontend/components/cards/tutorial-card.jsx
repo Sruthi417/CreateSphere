@@ -74,14 +74,14 @@ export default function TutorialCard({ tutorial, index = 0 }) {
             </div>
 
             <div className="flex items-center justify-between mt-auto">
-              <div className="flex items-center gap-2">
+              {/* <div className="flex items-center gap-2">
                 <Badge
                   variant="secondary"
                   className={`${difficultyColors[tutorial.difficulty] || ''} text-[10px] font-bold uppercase px-2 py-0 h-5`}
                 >
                   {tutorial.difficulty}
                 </Badge>
-              </div>
+              </div> */}
               <div className="flex items-center gap-1 text-xs font-bold text-slate-700">
                 <StarRating rating={tutorial.averageRating || 0} size="sm" />
                 <span>{tutorial.averageRating?.toFixed(1) || '0.0'}</span>

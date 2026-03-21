@@ -22,7 +22,7 @@ import { User, Mail, Calendar, Loader2, Save } from 'lucide-react';
 
 export default function UserProfilePage() {
   const router = useRouter();
-  const { isAuthenticated, user, setUser } = useAuthStore();
+  const { isAuthenticated, user, setUser, hydrated } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState(null);
@@ -39,12 +39,19 @@ export default function UserProfilePage() {
   });
 
   useEffect(() => {
+    // Wait for hydration to complete before checking auth
+    if (!hydrated) {
+      return;
+    }
+
+    // Now safely check if authenticated
     if (!isAuthenticated) {
       router.push('/auth/login');
       return;
     }
+
     fetchProfile();
-  }, [isAuthenticated]);
+  }, [hydrated, isAuthenticated]);
 
   const fetchProfile = async () => {
     try {

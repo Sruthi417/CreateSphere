@@ -25,7 +25,12 @@ const MessageSchema = new Schema(
     text: {
       type: String,
       trim: true,
-      required: true
+      required: function() { return !this.attachmentUrl; }
+    },
+
+    attachmentUrl: {
+      type: String,
+      default: ""
     },
 
     isRead: {

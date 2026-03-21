@@ -58,7 +58,7 @@ creatorRoutes.post("/complete", authMiddleware, completeCreatorSetup);
 //
 
 // View my creator profile
-creatorRoutes.get("/me/profile", authMiddleware, requireRole("creator"), getMyCreatorProfile);
+creatorRoutes.get("/me/profile", authMiddleware, getMyCreatorProfile);
 
 // Update creator profile
 creatorRoutes.put("/me/profile", authMiddleware, requireRole("creator"), updateCreatorProfile);
@@ -67,7 +67,7 @@ creatorRoutes.put("/me/profile", authMiddleware, requireRole("creator"), updateC
 creatorRoutes.post("/me/deactivate", authMiddleware, requireRole("creator"), deactivateCreatorProfile);
 
 // Verification
-creatorRoutes.get("/me/verification/eligibility", authMiddleware, requireRole("creator"), checkVerificationEligibility);
+creatorRoutes.get("/me/verification/eligibility", authMiddleware, checkVerificationEligibility);
 creatorRoutes.post("/me/verification/apply", authMiddleware, requireRole("creator"), applyForVerification);
 
 // Reactivate creator mode

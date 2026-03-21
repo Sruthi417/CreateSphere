@@ -39,11 +39,7 @@ const stagger = {
 };
 
 export default function HomePage() {
-  const { initializeAuth, isAuthenticated } = useAuthStore();
-
-  useEffect(() => {
-    initializeAuth();
-  }, [initializeAuth]);
+  const { isAuthenticated } = useAuthStore();
 
   const features = [
     {

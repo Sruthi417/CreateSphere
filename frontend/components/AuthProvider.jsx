@@ -17,24 +17,25 @@ import { authAPI, userAPI } from '@/lib/api-client';
  * after page refresh until token expires (7 days by default)
  */
 export default function AuthProvider({ children }) {
-  const { setAuthToken, setUser, setUserRole, setCreatorProfile, authToken } = useAuthStore();
+  const { setAuthToken, setUser, setUserRole, setCreatorProfile, authToken, setHydrated } = useAuthStore();
 
   useEffect(() => {
     const restoreAuthState = async () => {
       // Check if running in browser
       if (typeof window === 'undefined') return;
 
-      // Try to get tokens from localStorage
-      const adminToken = localStorage.getItem('adminToken');
-      const authToken = localStorage.getItem('authToken');
-      const storedToken = adminToken || authToken;
-
-      // If no token stored, nothing to restore
-      if (!storedToken) {
-        return;
-      }
-
       try {
+        // Try to get tokens from localStorage
+        const adminToken = localStorage.getItem('adminToken');
+        const authToken = localStorage.getItem('authToken');
+        const storedToken = adminToken || authToken;
+
+        // If no token stored, mark as hydrated and return
+        if (!storedToken) {
+          setHydrated(true);
+          return;
+        }
+
         // Set correctly based on which token we found
         if (adminToken) {
           useAuthStore.getState().setAdminToken(adminToken);
@@ -81,6 +82,10 @@ export default function AuthProvider({ children }) {
         // Only log hydration errors, don't wipe session automatically
         // Axios interceptor handles 401 real auth failures
         console.log('Auth restoration info:', error.message);
+      } finally {
+        // CRITICAL: Mark as hydrated whether success or failure
+        // This prevents premature logouts while restoration is in progress
+        setHydrated(true);
       }
     };
 

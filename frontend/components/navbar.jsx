@@ -35,7 +35,7 @@ import { getImageUrl } from '@/lib/utils';
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { isAuthenticated, user, userRole, logout } = useAuthStore();
+  const { isAuthenticated, user, userRole, logout, initializeAuth } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const { mobileMenuOpen, setMobileMenuOpen } = useUIStore();
   const [mounted, setMounted] = useState(false);
@@ -43,6 +43,7 @@ export default function Navbar() {
 
   useEffect(() => {
     setMounted(true);
+    initializeAuth();
     const handleScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);

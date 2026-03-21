@@ -44,15 +44,6 @@ export default function ChatHeader({ participant, onlineStatus, onReport }) {
                         <Flag className="h-4 w-4" />
                     </Button>
                 )}
-                <Button variant="ghost" size="icon">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                </Button>
-                <Button variant="ghost" size="icon">
-                    <Video className="h-4 w-4 text-muted-foreground" />
-                </Button>
-                <Button variant="ghost" size="icon">
-                    <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                </Button>
             </div>
         </div>
     );

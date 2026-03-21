@@ -16,6 +16,7 @@ export const useAuthStore = create(
       isAdminAuthenticated: false,
       followedCreators: [],
       favoritedProducts: [],
+      hydrated: false,
 
       setFollowedCreators: (ids) => set({ followedCreators: ids }),
       setFavoritedProducts: (ids) => set({ favoritedProducts: ids }),
@@ -38,6 +39,8 @@ export const useAuthStore = create(
         set({ favoritedProducts: newList });
       },
 
+      setHydrated: (isHydrated) => set({ hydrated: isHydrated }),
+
       setAuthToken: (token) => {
         if (typeof window !== 'undefined') {
           if (token) {
@@ -59,8 +62,9 @@ export const useAuthStore = create(
           onboardingStatus: user?.onboardingStatus || 'none',
           creatorProfile: user?.creatorProfile || null,
         });
-        if (typeof window !== 'undefined' && user?.role) {
-          localStorage.setItem('userRole', user.role);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('userRole', user.role || 'user');
+          localStorage.setItem('user', JSON.stringify(user));
         }
       },
 
@@ -91,6 +95,7 @@ export const useAuthStore = create(
           localStorage.removeItem('authToken');
           localStorage.removeItem('userRole');
           localStorage.removeItem('adminToken');
+          localStorage.removeItem('user');
         }
         set({
           authToken: null,
@@ -103,6 +108,7 @@ export const useAuthStore = create(
           isAdminAuthenticated: false,
           followedCreators: [],
           favoritedProducts: [],
+          hydrated: true,
         });
       },
 
@@ -111,12 +117,15 @@ export const useAuthStore = create(
           const token = localStorage.getItem('authToken');
           const role = localStorage.getItem('userRole');
           const adminToken = localStorage.getItem('adminToken');
+          const storedUser = localStorage.getItem('user');
+
           set({
             authToken: token,
-            isAuthenticated: !!token,
+            isAuthenticated: !!token || !!adminToken,
             userRole: role,
             adminToken,
             isAdminAuthenticated: !!adminToken,
+            user: storedUser ? JSON.parse(storedUser) : null
           });
         }
       },

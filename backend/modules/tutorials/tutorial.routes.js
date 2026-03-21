@@ -40,7 +40,6 @@ tutorialRouter.get("/creator/:creatorId", listCreatorTutorials);
 tutorialRouter.get(
   "/me/list",
   authMiddleware,
-  requireRole("creator"),
   listMyTutorials
 );
 

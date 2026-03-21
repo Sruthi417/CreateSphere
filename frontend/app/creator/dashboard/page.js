@@ -24,12 +24,10 @@ import {
   Plus,
   Edit,
   Trash2,
-  RotateCcw,
   CheckCircle2,
   AlertCircle,
   Loader2,
   Eye,
-  EyeOff,
   BadgeCheck,
   Shield,
 } from 'lucide-react';
@@ -37,7 +35,7 @@ import ProductImage from '@/components/ui/product-image';
 
 export default function CreatorDashboardPage() {
   const router = useRouter();
-  const { isAuthenticated, user, userRole, creatorProfile, setCreatorProfile, setUser } = useAuthStore();
+  const { isAuthenticated, user, userRole, creatorProfile, setCreatorProfile, setUser, hydrated } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [products, setProducts] = useState([]);
@@ -47,17 +45,23 @@ export default function CreatorDashboardPage() {
   const [eligibility, setEligibility] = useState(null);
 
   useEffect(() => {
+    // Wait for hydration to complete before checking auth
+    if (!hydrated) {
+      return;
+    }
+
+    // Now safely check if authenticated
     if (!isAuthenticated) {
       router.push('/auth/login');
       return;
     }
     fetchData();
-  }, [isAuthenticated]);
+  }, [hydrated, isAuthenticated]);
 
   const fetchData = async () => {
     try {
       const [profileRes, productsRes, tutorialsRes, eligibilityRes] = await Promise.all([
-        creatorAPI.getMyProfile(),
+        creatorAPI.getMyProfile().catch(() => ({ data: { data: user } })),
         productAPI.getMyList().catch(() => ({ data: { data: [] } })),
         tutorialAPI.getMyList().catch(() => ({ data: { data: [] } })),
         creatorAPI.checkVerificationEligibility().catch(() => ({ data: { data: null } })),
@@ -68,8 +72,8 @@ export default function CreatorDashboardPage() {
       if (profileRes.data.data) {
         setUser(profileRes.data.data);
       }
-      setProducts(productsRes.data.data || []);
-      setTutorials(tutorialsRes.data.data || []);
+      setProducts((productsRes.data.data || []).filter(p => p.status !== 'deleted' && p.status !== 'removed'));
+      setTutorials((tutorialsRes.data.data || []).filter(t => t.status !== 'deleted' && t.status !== 'removed'));
     } catch (error) {
       toast.error('Failed to load dashboard data');
       if (error.response?.status === 403) {
@@ -108,36 +112,15 @@ export default function CreatorDashboardPage() {
     }
   };
 
-  const handleRestoreProduct = async (productId) => {
-    setActionLoading(productId);
-    try {
-      await productAPI.restore(productId);
-      toast.success('Product restored');
-      fetchData();
-    } catch (error) {
-      toast.error('Failed to restore product');
-    } finally {
-      setActionLoading('');
-    }
-  };
 
-  const handleRestoreTutorial = async (tutorialId) => {
-    setActionLoading(tutorialId);
-    try {
-      await tutorialAPI.restore(tutorialId);
-      toast.success('Tutorial restored');
-      fetchData();
-    } catch (error) {
-      toast.error('Failed to restore tutorial');
-    } finally {
-      setActionLoading('');
-    }
-  };
 
   const handleDeactivate = async () => {
     setActionLoading('deactivate');
     try {
-      await creatorAPI.deactivate();
+      const response = await creatorAPI.deactivate();
+      if (response.data?.data) {
+        setUser(response.data.data);
+      }
       toast.success('Creator mode deactivated');
       fetchData();
     } catch (error) {
@@ -150,7 +133,10 @@ export default function CreatorDashboardPage() {
   const handleReactivate = async () => {
     setActionLoading('reactivate');
     try {
-      await creatorAPI.reactivate();
+      const response = await creatorAPI.reactivate();
+      if (response.data?.data) {
+        setUser(response.data.data);
+      }
       toast.success('Creator mode reactivated');
       fetchData();
     } catch (error) {
@@ -359,6 +345,7 @@ export default function CreatorDashboardPage() {
                           </div>
 
                           <div className="flex gap-2 pt-2 border-t mt-auto">
+                            {/* Simplified Actions - Only View, Edit, Delete */}
                             <Link href={`/product/${product._id}`} className="flex-1">
                               <Button variant="outline" size="sm" className="w-full">
                                 <Eye className="h-4 w-4 mr-2" />
@@ -370,29 +357,14 @@ export default function CreatorDashboardPage() {
                                 <Edit className="h-4 w-4" />
                               </Button>
                             </Link>
-                            {product.status === 'deleted' ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleRestoreProduct(product._id)}
-                                disabled={actionLoading === product._id}
-                              >
-                                {actionLoading === product._id ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <RotateCcw className="h-4 w-4" />
-                                )}
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-destructive hover:bg-destructive/10"
-                                onClick={() => setDeleteDialog({ open: true, type: 'product', id: product._id })}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-destructive hover:bg-destructive/10"
+                              onClick={() => setDeleteDialog({ open: true, type: 'product', id: product._id })}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>
@@ -449,13 +421,22 @@ export default function CreatorDashboardPage() {
                             <p className="text-sm text-muted-foreground line-clamp-2 mb-3 h-10">
                               {tutorial.description}
                             </p>
-                            <div className="flex flex-wrap gap-2 mb-4">
-                              <Badge variant="outline" className="text-[10px] uppercase tracking-wider">{tutorial.difficulty}</Badge>
-                              <Badge variant="outline" className="text-[10px] uppercase tracking-wider">{tutorial.type}</Badge>
+                            <div className="flex items-center justify-between gap-2 mb-4">
+                              <div className="flex flex-wrap gap-2">
+                                <Badge variant="outline" className="text-[10px] uppercase tracking-wider">{tutorial.difficulty}</Badge>
+                                <Badge variant="outline" className="text-[10px] uppercase tracking-wider">{tutorial.type}</Badge>
+                              </div>
+                              <Avatar className="h-6 w-6 border">
+                                <AvatarImage src={profile?.avatarUrl || user?.avatarUrl} />
+                                <AvatarFallback className="text-[8px]">
+                                  {cp.displayName?.charAt(0) || user?.name?.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
                             </div>
                           </div>
 
                           <div className="flex gap-2 pt-2 border-t mt-auto">
+                            {/* Simplified Actions - Only View, Edit, Delete */}
                             <Link href={`/tutorial/${tutorial._id}`} className="flex-1">
                               <Button variant="outline" size="sm" className="w-full">
                                 <Eye className="h-4 w-4 mr-2" />
@@ -467,29 +448,14 @@ export default function CreatorDashboardPage() {
                                 <Edit className="h-4 w-4" />
                               </Button>
                             </Link>
-                            {tutorial.status === 'deleted' ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleRestoreTutorial(tutorial._id)}
-                                disabled={actionLoading === tutorial._id}
-                              >
-                                {actionLoading === tutorial._id ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <RotateCcw className="h-4 w-4" />
-                                )}
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-destructive hover:bg-destructive/10"
-                                onClick={() => setDeleteDialog({ open: true, type: 'tutorial', id: tutorial._id })}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-destructive hover:bg-destructive/10"
+                              onClick={() => setDeleteDialog({ open: true, type: 'tutorial', id: tutorial._id })}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>
@@ -625,7 +591,7 @@ export default function CreatorDashboardPage() {
         open={deleteDialog.open}
         onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}
         title={`Delete ${deleteDialog.type}?`}
-        description="This will hide the content from the marketplace. You can restore it later."
+        description="This will permanently hide the content from the marketplace and remove it from your dashboard."
         confirmText="Delete"
         variant="destructive"
         onConfirm={deleteDialog.type === 'product' ? handleDeleteProduct : handleDeleteTutorial}

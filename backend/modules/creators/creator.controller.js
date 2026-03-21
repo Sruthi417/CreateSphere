@@ -108,7 +108,7 @@ export const completeCreatorSetup = async (req, res) => {
 export const getMyCreatorProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select(
-      "name email role creatorProfile onboardingStatus"
+      "name email role avatarUrl creatorProfile onboardingStatus"
     );
 
     if (!user || (!user.creatorProfile && user.role !== "creator"))
@@ -305,7 +305,8 @@ export const deactivateCreatorProfile = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Creator profile deactivated"
+      message: "Creator profile deactivated",
+      data: user
     });
 
   } catch {
@@ -335,7 +336,8 @@ export const reactivateCreatorProfile = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Creator profile reactivated"
+      message: "Creator profile reactivated",
+      data: user
     });
 
   } catch {

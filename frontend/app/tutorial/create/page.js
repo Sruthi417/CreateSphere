@@ -28,7 +28,7 @@ import TutorialThumbnailUpload from '@/components/tutorial-thumbnail-upload.jsx'
 
 export default function CreateTutorialPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, hydrated } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
@@ -57,12 +57,18 @@ export default function CreateTutorialPage() {
   const categoryId = watch('categoryId');
 
   useEffect(() => {
+    // Wait for hydration to complete before checking auth
+    if (!hydrated) {
+      return;
+    }
+
+    // Now safely check if authenticated
     if (!isAuthenticated) {
       router.push('/auth/login');
       return;
     }
     fetchCategories();
-  }, [isAuthenticated, router]);
+  }, [hydrated, isAuthenticated, router]);
 
   const fetchCategories = async () => {
     try {

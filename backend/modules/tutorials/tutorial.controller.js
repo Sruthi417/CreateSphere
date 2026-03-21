@@ -107,11 +107,13 @@ export const listAllTutorials = async (req, res) => {
       status: "active",
       visibility: "public",
     })
+      .populate("creatorId", "name avatarUrl creatorProfile")
+      .populate("categoryId", "name")
       .sort(sort)
       .skip(skip)
       .limit(limit)
       .select(
-        "title thumbnailUrl creatorId categoryId averageRating reviewsCount type createdAt description"
+        "title thumbnailUrl creatorId categoryId averageRating reviewsCount type createdAt description tags difficulty"
       )
       .lean();
 
@@ -162,11 +164,13 @@ export const listTutorialsByCategory = async (req, res) => {
       status: "active",
       visibility: "public",
     })
+      .populate("creatorId", "name avatarUrl creatorProfile")
+      .populate("categoryId", "name")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .select(
-        "title thumbnailUrl creatorId averageRating reviewsCount type createdAt description"
+        "title thumbnailUrl creatorId categoryId averageRating reviewsCount type createdAt description tags difficulty"
       )
       .lean();
 
@@ -213,7 +217,12 @@ export const listCreatorTutorials = async (req, res) => {
       status: "active",
       visibility: "public",
     })
-      .sort({ createdAt: -1 });
+      .populate("creatorId", "name avatarUrl creatorProfile")
+      .populate("categoryId", "name")
+      .sort({ createdAt: -1 })
+      .select(
+        "title thumbnailUrl creatorId categoryId averageRating reviewsCount type createdAt description tags difficulty"
+      );
 
     return res.status(200).json({
       success: true,
@@ -409,11 +418,13 @@ export const searchTutorials = async (req, res) => {
     };
 
     const results = await Tutorial.find(filter)
+      .populate("creatorId", "name avatarUrl creatorProfile")
+      .populate("categoryId", "name")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .select(
-        "title thumbnailUrl creatorId averageRating reviewsCount type createdAt description tags"
+        "title thumbnailUrl creatorId categoryId averageRating reviewsCount type createdAt description tags difficulty"
       )
       .lean();
 

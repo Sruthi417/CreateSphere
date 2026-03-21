@@ -49,19 +49,20 @@ export default function MessageThread({ conversationId }) {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    const handleSend = async (text) => {
+    const handleSend = async (text, attachmentUrl) => {
         // Optimistic update
         const tempId = Date.now().toString();
         addMessage({
             _id: tempId,
             senderId: user?._id,
             text,
+            attachmentUrl,
             createdAt: new Date().toISOString(),
             isRead: false
         });
 
         try {
-            await chatAPI.sendMessage(conversationId, text);
+            await chatAPI.sendMessage(conversationId, text, attachmentUrl);
             // The polling will pick up the real message eventually, or we could replace it
             // Ideally we replace the temp one, but for polling approach, it might duplicate briefly if we are not careful
             // But since polling replaces the whole list (in this implementation), it should be fine.

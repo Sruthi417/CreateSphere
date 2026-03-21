@@ -48,9 +48,9 @@ export const sendMessage = async (req, res) => {
   try {
     const senderId = req.user.id;
     const { conversationId } = req.params;
-    const { text } = req.body;
+    const { text, attachmentUrl } = req.body;
 
-    if (!text?.trim())
+    if (!text?.trim() && !attachmentUrl)
       return res.status(400).json({ success: false, message: "Message cannot be empty" });
 
     const convo = await Conversation.findById(conversationId);
@@ -68,11 +68,12 @@ export const sendMessage = async (req, res) => {
       conversationId,
       senderId,
       receiverId,
-      text
+      text: text || "",
+      attachmentUrl: attachmentUrl || ""
     });
 
     // update last message
-    convo.lastMessage = text;
+    convo.lastMessage = text || "Attachment";
     convo.lastMessageAt = new Date();
 
     // increment receiver unread count
