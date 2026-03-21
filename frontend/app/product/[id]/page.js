@@ -349,34 +349,38 @@ export default function ProductDetailPage() {
 
               {/* Creator Card */}
               {product.creatorId && (
-                <Card>
-                  <CardContent className="p-4">
-                    <Link href={`/creator/${typeof product.creatorId === 'object' ? product.creatorId._id : product.creatorId}`}>
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-12 w-12">
-                          <AvatarImage src={product.creatorId?.avatarUrl} />
-                          <AvatarFallback>
-                            {product.creatorId?.name?.charAt(0) || 'C'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-1">
-                            <span className="font-semibold">
-                              {product.creatorId?.creatorProfile?.displayName || product.creatorId?.name || 'Creator'}
-                            </span>
-                            {product.creatorId?.creatorProfile?.verified && (
-                              <CheckCircle2 className="h-4 w-4 text-primary" />
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {product.creatorId?.creatorProfile?.tagline || 'Creator'}
-                          </p>
-                        </div>
-                        <Button size="sm">View Profile</Button>
+                <div className="bg-white border rounded-lg overflow-hidden flex flex-col items-center">
+                  <div className="p-6 flex items-center gap-4 w-full">
+                    <Avatar className="h-16 w-16 border-2 border-white shadow-sm ring-1 ring-slate-100">
+                      <AvatarImage src={product.creatorId?.avatarUrl} />
+                      <AvatarFallback>
+                        {product.creatorId?.name?.charAt(0) || 'C'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-1">
+                        <span className="font-bold text-lg text-slate-900 leading-tight">
+                          {product.creatorId?.creatorProfile?.displayName || product.creatorId?.name || 'Creator'}
+                        </span>
+                        {product.creatorId?.creatorProfile?.verified && (
+                          <CheckCircle2 className="h-4 w-4 text-primary" />
+                        )}
                       </div>
-                    </Link>
-                  </CardContent>
-                </Card>
+                      <p className="text-sm text-slate-500 font-medium">
+                         {product.creatorId?.creatorProfile?.rating || 0} creator Rating
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="w-full h-px bg-slate-100" />
+                  
+                  <Link 
+                    href={`/creator/${typeof product.creatorId === 'object' ? product.creatorId._id : product.creatorId}`}
+                    className="w-full py-4 text-center text-primary font-bold hover:bg-slate-50 transition-colors"
+                  >
+                    View creator profile
+                  </Link>
+                </div>
               )}
             </motion.div>
           </div>

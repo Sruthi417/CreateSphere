@@ -111,7 +111,7 @@ export const getMyCreatorProfile = async (req, res) => {
       "name email role creatorProfile onboardingStatus"
     );
 
-    if (!user || user.role !== "creator")
+    if (!user || (!user.creatorProfile && user.role !== "creator"))
       return res.status(404).json({ success: false, message: "Creator profile not found" });
 
     return res.status(200).json({ success: true, data: user });

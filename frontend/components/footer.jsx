@@ -2,21 +2,8 @@
 
 import Link from 'next/link';
 import { Palette, Twitter, Instagram, Youtube, Github } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { useState } from 'react';
-import { toast } from 'sonner';
 
 export default function Footer() {
-  const [email, setEmail] = useState('');
-
-  const handleNewsletterSubmit = (e) => {
-    e.preventDefault();
-    if (email) {
-      toast.success('Thanks for subscribing!');
-      setEmail('');
-    }
-  };
 
   const footerLinks = {
     product: [
@@ -52,20 +39,6 @@ export default function Footer() {
             <p className="text-muted-foreground mb-4 max-w-xs">
               Discover unique handmade creations, connect with talented artisans, and unleash your creativity.
             </p>
-
-            {/* Newsletter */}
-            <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="max-w-[220px]"
-              />
-              <Button type="submit" size="sm">
-                Subscribe
-              </Button>
-            </form>
           </div>
 
           {/* Links */}

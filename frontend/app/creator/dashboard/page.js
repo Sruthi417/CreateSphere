@@ -25,7 +25,6 @@ import {
   Edit,
   Trash2,
   RotateCcw,
-  Settings,
   CheckCircle2,
   AlertCircle,
   Loader2,
@@ -38,7 +37,7 @@ import ProductImage from '@/components/ui/product-image';
 
 export default function CreatorDashboardPage() {
   const router = useRouter();
-  const { isAuthenticated, user, userRole, creatorProfile, setCreatorProfile } = useAuthStore();
+  const { isAuthenticated, user, userRole, creatorProfile, setCreatorProfile, setUser } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [products, setProducts] = useState([]);
@@ -65,7 +64,10 @@ export default function CreatorDashboardPage() {
       ]);
       setProfile(profileRes.data.data);
       setEligibility(eligibilityRes.data.data);
-      setCreatorProfile(profileRes.data.data?.creatorProfile);
+      // Synchronize with auth store
+      if (profileRes.data.data) {
+        setUser(profileRes.data.data);
+      }
       setProducts(productsRes.data.data || []);
       setTutorials(tutorialsRes.data.data || []);
     } catch (error) {
@@ -221,12 +223,6 @@ export default function CreatorDashboardPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Link href="/creator/settings">
-                <Button variant="outline">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
-                </Button>
-              </Link>
               {cp.isDeactivated ? (
                 <Button onClick={handleReactivate} disabled={actionLoading === 'reactivate'}>
                   {actionLoading === 'reactivate' && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
@@ -330,71 +326,73 @@ export default function CreatorDashboardPage() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {products.map((product) => (
-                      <Card key={product._id}>
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-4">
-                            <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                              <ProductImage
-                                src={product.images?.[0]}
-                                alt={product.title}
-                                fill
-                                className="object-cover"
-                              />
+                      <Card key={product._id} className="flex flex-col h-full group overflow-hidden border-2 hover:border-primary/50 transition-all duration-300">
+                        <div className="aspect-square relative overflow-hidden bg-muted">
+                          <ProductImage
+                            src={product.images?.[0]}
+                            alt={product.title}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                          <div className="absolute top-2 right-2 flex flex-col gap-2">
+                            <Badge variant={product.status === 'active' ? 'default' : 'secondary'} className="shadow-sm">
+                              {product.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        <CardContent className="p-4 flex-1 flex flex-col">
+                          <div className="flex-1">
+                            <h3 className="font-bold text-lg mb-1 line-clamp-1">{product.title}</h3>
+                            <p className="text-sm text-muted-foreground line-clamp-2 mb-3 h-10">
+                              {product.shortDescription || product.description}
+                            </p>
+                            <div className="flex items-center gap-3 text-sm text-muted-foreground mb-4">
+                              <span className="flex items-center gap-1 font-medium">
+                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 border-none" />
+                                {product.averageRating?.toFixed(1) || 'N/A'}
+                              </span>
+                              <span>•</span>
+                              <span>{product.reviewsCount || 0} reviews</span>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-semibold truncate">{product.title}</h3>
-                                <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
-                                  {product.status}
-                                </Badge>
-                              </div>
-                              <p className="text-sm text-muted-foreground truncate">
-                                {product.shortDescription || product.description}
-                              </p>
-                              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                                <span className="flex items-center gap-1">
-                                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                                  {product.averageRating?.toFixed(1) || 'N/A'}
-                                </span>
-                                <span>{product.reviewsCount || 0} reviews</span>
-                              </div>
-                            </div>
-                            <div className="flex gap-2">
-                              <Link href={`/product/${product._id}`}>
-                                <Button variant="ghost" size="icon">
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              </Link>
-                              <Link href={`/product/${product._id}/edit`}>
-                                <Button variant="ghost" size="icon">
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </Link>
-                              {product.status === 'deleted' ? (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleRestoreProduct(product._id)}
-                                  disabled={actionLoading === product._id}
-                                >
-                                  {actionLoading === product._id ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <RotateCcw className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              ) : (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => setDeleteDialog({ open: true, type: 'product', id: product._id })}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
+                          </div>
+
+                          <div className="flex gap-2 pt-2 border-t mt-auto">
+                            <Link href={`/product/${product._id}`} className="flex-1">
+                              <Button variant="outline" size="sm" className="w-full">
+                                <Eye className="h-4 w-4 mr-2" />
+                                View
+                              </Button>
+                            </Link>
+                            <Link href={`/product/${product._id}/edit`}>
+                              <Button variant="outline" size="sm">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                            {product.status === 'deleted' ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleRestoreProduct(product._id)}
+                                disabled={actionLoading === product._id}
+                              >
+                                {actionLoading === product._id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <RotateCcw className="h-4 w-4" />
+                                )}
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-destructive hover:bg-destructive/10"
+                                onClick={() => setDeleteDialog({ open: true, type: 'product', id: product._id })}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </CardContent>
                       </Card>
@@ -423,65 +421,75 @@ export default function CreatorDashboardPage() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {tutorials.map((tutorial) => (
-                      <Card key={tutorial._id}>
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-4">
-                            <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                              <div className="flex items-center justify-center h-full">
-                                <BookOpen className="h-8 w-8 text-muted-foreground" />
-                              </div>
+                      <Card key={tutorial._id} className="flex flex-col h-full group overflow-hidden border-2 hover:border-primary/50 transition-all duration-300">
+                        <div className="aspect-square relative overflow-hidden bg-muted">
+                          {tutorial.thumbnailUrl ? (
+                            <ProductImage
+                              src={tutorial.thumbnailUrl}
+                              alt={tutorial.title}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                          ) : (
+                            <div className="flex items-center justify-center h-full">
+                              <BookOpen className="h-12 w-12 text-muted-foreground" />
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-semibold truncate">{tutorial.title}</h3>
-                                <Badge variant={tutorial.status === 'active' ? 'default' : 'secondary'}>
-                                  {tutorial.status}
-                                </Badge>
-                              </div>
-                              <p className="text-sm text-muted-foreground truncate">
-                                {tutorial.description}
-                              </p>
-                              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                                <Badge variant="outline">{tutorial.difficulty}</Badge>
-                                <Badge variant="outline">{tutorial.type}</Badge>
-                              </div>
+                          )}
+                          <div className="absolute top-2 right-2 flex flex-col gap-2">
+                            <Badge variant={tutorial.status === 'active' ? 'default' : 'secondary'} className="shadow-sm">
+                              {tutorial.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        <CardContent className="p-4 flex-1 flex flex-col">
+                          <div className="flex-1">
+                            <h3 className="font-bold text-lg mb-1 line-clamp-1">{tutorial.title}</h3>
+                            <p className="text-sm text-muted-foreground line-clamp-2 mb-3 h-10">
+                              {tutorial.description}
+                            </p>
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              <Badge variant="outline" className="text-[10px] uppercase tracking-wider">{tutorial.difficulty}</Badge>
+                              <Badge variant="outline" className="text-[10px] uppercase tracking-wider">{tutorial.type}</Badge>
                             </div>
-                            <div className="flex gap-2">
-                              <Link href={`/tutorial/${tutorial._id}`}>
-                                <Button variant="ghost" size="icon">
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              </Link>
-                              <Link href={`/tutorial/${tutorial._id}/edit`}>
-                                <Button variant="ghost" size="icon">
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </Link>
-                              {tutorial.status === 'deleted' ? (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleRestoreTutorial(tutorial._id)}
-                                  disabled={actionLoading === tutorial._id}
-                                >
-                                  {actionLoading === tutorial._id ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <RotateCcw className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              ) : (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => setDeleteDialog({ open: true, type: 'tutorial', id: tutorial._id })}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
+                          </div>
+
+                          <div className="flex gap-2 pt-2 border-t mt-auto">
+                            <Link href={`/tutorial/${tutorial._id}`} className="flex-1">
+                              <Button variant="outline" size="sm" className="w-full">
+                                <Eye className="h-4 w-4 mr-2" />
+                                View
+                              </Button>
+                            </Link>
+                            <Link href={`/tutorial/${tutorial._id}/edit`}>
+                              <Button variant="outline" size="sm">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                            {tutorial.status === 'deleted' ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleRestoreTutorial(tutorial._id)}
+                                disabled={actionLoading === tutorial._id}
+                              >
+                                {actionLoading === tutorial._id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <RotateCcw className="h-4 w-4" />
+                                )}
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-destructive hover:bg-destructive/10"
+                                onClick={() => setDeleteDialog({ open: true, type: 'tutorial', id: tutorial._id })}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </CardContent>
                       </Card>
