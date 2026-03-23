@@ -390,7 +390,8 @@ export const listReportedCreators = async (req, res) => {
           _id: "$creatorId",
           count: { $sum: 1 },
           latestAt: { $max: "$createdAt" },
-          reasons: { $push: "$reasonCode" }
+          reasons: { $push: "$reasonCode" },
+          notes: { $push: "$additionalNote" }
         }
       },
       { $sort: { count: -1, latestAt: -1 } }
@@ -408,6 +409,7 @@ export const listReportedCreators = async (req, res) => {
         count: group.count,
         latestAt: group.latestAt,
         reasons: group.reasons,
+        notes: group.notes,
         content: {
           name: u.name,
           email: u.email,

@@ -76,7 +76,7 @@ export const applyModerationAction = async ({
       user.isBlocked = true;
       user.status = "suspended";
       await notifyUser(user._id, "⛔ Account suspended — " + reason);
-      
+
       if (user.role === "creator") {
         await Product.updateMany(
           { creatorId: user._id },
@@ -95,7 +95,7 @@ export const applyModerationAction = async ({
       user.isBlocked = true;
       user.status = "hidden";
       await notifyUser(user._id, "⚠ Your profile has been hidden by an admin — " + reason);
-      
+
       if (user.role === "creator") {
         await Product.updateMany(
           { creatorId: user._id },

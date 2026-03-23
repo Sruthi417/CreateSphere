@@ -164,7 +164,7 @@ const UserSchema = new Schema(
 
     onboardingStatus: {
       type: String,
-      enum: ["none", "creator_pending", "creator_completed", "admin_completed", "creator_deactivated"],
+      enum: ["none", "creator_pending", "creator_completed", "admin_completed"],
       default: "none",
       index: true
     },

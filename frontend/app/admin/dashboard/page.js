@@ -41,6 +41,7 @@ import {
   MoreVertical,
   LayoutDashboard,
   BadgeCheck,
+  MessageSquare,
 } from 'lucide-react';
 import {
   Dialog,
@@ -639,6 +640,22 @@ export default function AdminDashboardPage() {
                                     {report.reasons.length > 3 && (
                                       <span className="text-[10px] text-muted-foreground">+{report.reasons.length - 3} more</span>
                                     )}
+                                  </div>
+                                )}
+                                {report.notes && report.notes.filter(n => n?.trim()).length > 0 && (
+                                  <div className="mt-3 text-[11px] bg-slate-50 p-2.5 rounded-lg border border-slate-200 shadow-sm max-w-md">
+                                    <span className="font-bold text-slate-800 flex items-center gap-1 mb-1.5">
+                                      <MessageSquare className="h-3 w-3 text-slate-500" />
+                                      User Report Comments:
+                                    </span>
+                                    <ul className="list-disc pl-4 space-y-1 text-slate-600">
+                                      {Array.from(new Set(report.notes.filter(n => n?.trim()))).slice(0, 3).map((note, i) => (
+                                        <li key={i} className="line-clamp-2 italic">"{note}"</li>
+                                      ))}
+                                      {Array.from(new Set(report.notes.filter(n => n?.trim()))).length > 3 && (
+                                        <li className="list-none text-xs text-muted-foreground mt-1 cursor-pointer hover:underline" onClick={() => handleViewReportDetails(report._id?.targetId || report.targetId)}>View all notes...</li>
+                                      )}
+                                    </ul>
                                   </div>
                                 )}
                                 {report.creator && (['product', 'tutorial'].includes(report._id?.targetType || report.targetType)) && (
