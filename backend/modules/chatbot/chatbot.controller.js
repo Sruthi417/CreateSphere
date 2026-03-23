@@ -157,11 +157,15 @@ export const analyzeChat = async (req, res) => {
     ======================================================= */
     if (shouldExtractMaterials) {
       if (image) {
-        const buffer = fs.readFileSync(image.path);
-
-        try {
-          fs.unlinkSync(image.path); // delete upload file
-        } catch { }
+        let buffer;
+        if (image.buffer) {
+          buffer = image.buffer;
+        } else {
+          buffer = fs.readFileSync(image.path);
+          try {
+            fs.unlinkSync(image.path); // delete upload file
+          } catch { }
+        }
 
         const visionResult = await craftModel.generateContent([
           {
@@ -478,7 +482,7 @@ export const generateImage = async (req, res) => {
     const base64Image = await generateImagePollinations(promptToUse);
 
     // 2) base64 -> png -> url
-    const imageUrl = saveBase64ToPngUrl(base64Image, sessionId);
+    const imageUrl = await saveBase64ToPngUrl(base64Image, sessionId);
 
     // 3) Update the image in lastIdeas so it persists on card refresh
     if (chosenIdea) {

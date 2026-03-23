@@ -87,7 +87,7 @@ tutorialRouter.post(
       return res.status(400).json({ success: false, message: "No image uploaded" });
     }
 
-    const imageUrl = `/uploads/${req.file.filename}`;
+    const imageUrl = req.file.path;
 
     return res.status(200).json({
       success: true,

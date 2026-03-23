@@ -9,7 +9,7 @@ import {
 } from "./chatbot.controller.js";
 
 const chatbotRouter = Router();
-const upload = multer({ dest: "uploads/" });
+const upload = multer({ storage: multer.memoryStorage() });
 
 chatbotRouter.post("/analyze", upload.single("image"), analyzeChat);
 chatbotRouter.post("/generate-image", generateImage);

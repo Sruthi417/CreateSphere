@@ -1,40 +1,30 @@
-import fs from "fs";
-import path from "path";
-import crypto from "crypto";
-import { SERVER_URL } from "../config/env.js";
+import cloudinary from "../config/cloudinary.js";
 
 /**
- * Saves base64 image into /uploads/chatbot/<sessionId>/<filename>.png
- * Returns full public URL: http://localhost:5001/uploads/chatbot/<sessionId>/<filename>.png
+ * Uploads base64 image into Cloudinary
+ * Returns full public URL
  */
-export const saveBase64ToPngUrl = (base64, sessionId) => {
+export const saveBase64ToPngUrl = async (base64, sessionId) => {
   if (!base64) throw new Error("base64 image required");
 
   const cleanBase64 = base64.includes("base64,")
-    ? base64.split("base64,")[1]
-    : base64;
+    ? base64
+    : `data:image/png;base64,${base64}`;
 
-  const buffer = Buffer.from(cleanBase64, "base64");
+  const result = await cloudinary.uploader.upload(cleanBase64, {
+    folder: `createsphere_chatbot/${sessionId}`
+  });
 
-  const folder = path.join(process.cwd(), "uploads", "chatbot", sessionId);
-  if (!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true });
-
-  const filename = `${Date.now()}-${crypto.randomBytes(6).toString("hex")}.png`;
-  const filepath = path.join(folder, filename);
-
-  fs.writeFileSync(filepath, buffer);
-
-  // Return full absolute URL using SERVER_URL from env
-  const baseUrl = SERVER_URL || "http://localhost:5001";
-  return `${baseUrl}/uploads/chatbot/${sessionId}/${filename}`;
+  return result.secure_url;
 };
 
 /**
- * Delete all images stored in /uploads/chatbot/<sessionId>
+ * Delete all images stored in Cloudinary for this session
  */
-export const deleteSessionImages = (sessionId) => {
-  const folder = path.join(process.cwd(), "uploads", "chatbot", sessionId);
-  if (fs.existsSync(folder)) {
-    fs.rmSync(folder, { recursive: true, force: true });
+export const deleteSessionImages = async (sessionId) => {
+  try {
+    await cloudinary.api.delete_resources_by_prefix(`createsphere_chatbot/${sessionId}`);
+  } catch (err) {
+    console.error("Failed to delete from cloudinary", err);
   }
 };

@@ -18,8 +18,8 @@ export const startChatbotCleanupWorker = () => {
       }).select("sessionId");
 
       for (const s of expiredSessions) {
-        // ✅ delete file folder
-        deleteSessionImages(s.sessionId);
+        // ✅ delete images on Cloudinary
+        await deleteSessionImages(s.sessionId);
 
         // ✅ mark expired
         await ChatbotSession.updateOne(

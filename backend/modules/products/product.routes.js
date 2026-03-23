@@ -68,9 +68,8 @@ productRouter.post("/image/upload", authMiddleware, requireRole("creator"), uplo
     return res.status(400).json({ success: false, message: "No image uploaded" });
   }
 
-  // Return the URL path to the uploaded file
-  // Assuming the server serves 'uploads' folder statically or via a specific route
-  const imageUrl = `/uploads/${req.file.filename}`;
+  // Return the URL path to the uploaded file from Cloudinary
+  const imageUrl = req.file.path;
 
   return res.status(200).json({
     success: true,

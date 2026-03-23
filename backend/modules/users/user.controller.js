@@ -276,10 +276,8 @@ export const uploadAvatar = async (req, res) => {
       return res.status(400).json({ success: false, message: "File size must be less than 2MB" });
     }
 
-    // Generate URL based on storage method
-    // For local storage: /uploads/{filename}
-    // For Cloudinary: would be set by middleware
-    let avatarUrl = req.file.secure_url || `/uploads/${req.file.filename}`;
+    // Use Cloudinary URL directly
+    let avatarUrl = req.file.path;
 
     // Update user with new avatar URL
     const user = await User.findByIdAndUpdate(
