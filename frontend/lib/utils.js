@@ -13,7 +13,7 @@ export function getImageUrl(url) {
 
   // If it's a backend upload, prepend server URL
   if (url.startsWith('/uploads')) {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://craft-sphere-backend.onrender.com/api';
     const baseUrl = apiUrl.endsWith('/api') ? apiUrl.slice(0, -4) : apiUrl;
     return `${baseUrl}${url}`;
   }
