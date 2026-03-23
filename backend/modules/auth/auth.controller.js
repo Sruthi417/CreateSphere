@@ -12,10 +12,11 @@ import {
 export const register = async (req, res) => {
   try {
     const result = await registerUser(req.body);
+    const message = result.message || "Account created. Please verify your email to login.";
 
     return res.status(201).json({
       success: true,
-      message: "Account created. Please verify your email to login.",
+      message,
       data: result,
     });
   } catch (error) {

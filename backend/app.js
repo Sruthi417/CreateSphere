@@ -11,10 +11,24 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // CORS
+const allowedOrigins = [
+  CLIENT_URL,
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "https://craft-sphere.vercel.app",
+  "https://www.craft-sphere.vercel.app",
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: CLIENT_URL || "http://localhost:3000",
-    credentials: true
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
+    credentials: true,
   })
 );
 

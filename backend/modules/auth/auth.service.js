@@ -45,7 +45,45 @@ export const registerUser = async (data) => {
   const normalizedEmail = email.trim().toLowerCase();
 
   const existing = await User.findOne({ email: normalizedEmail });
-  if (existing) throw new Error("An account already exists with this email");
+  if (existing) {
+    if (existing.emailVerified) {
+      throw new Error("An account already exists with this email");
+    } else {
+      // User exists but not verified - potentially from a previous failed/timeout attempt
+      // Resend verification automatically to help the user get unstuck
+      const { rawToken, hashed } = createHashedToken();
+      const verifyExpiryMinutes = parseInt(EMAIL_VERIFY_EXPIRY_MIN || "30");
+      
+      existing.emailVerificationToken = hashed;
+      existing.emailVerificationExpires = new Date(Date.now() + verifyExpiryMinutes * 60 * 1000);
+      await existing.save();
+
+      const verifyLink = `${CLIENT_URL}/verify-email?token=${rawToken}&email=${encodeURIComponent(existing.email)}`;
+
+      sendMail({
+        to: existing.email,
+        subject: "Verify your CreateSphere account",
+        html: `
+          <h2>Welcome back to CreateSphere 🎨</h2>
+          <p>It looks like you've already started signing up. Please verify your email to activate your account.</p>
+          <div style="margin: 20px 0;">
+            <a href="${verifyLink}" 
+               style="background-color: #1677ff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+              Verify Email
+            </a>
+          </div>
+          <p>This link expires in ${verifyExpiryMinutes} minutes.</p>
+        `,
+      }).catch(err => console.error("Resend on signup failed:", err));
+
+      return {
+        _id: existing._id,
+        name: existing.name,
+        email: existing.email,
+        message: "Account already registered. A new verification link has been sent to your email."
+      };
+    }
+  }
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -65,30 +103,34 @@ export const registerUser = async (data) => {
     emailVerificationExpires: new Date(Date.now() + verifyExpiryMinutes * 60 * 1000),
   });
 
-  // ✅ Send email verification link
+  // ✅ Send email verification link in the background (prevent timeouts)
   const verifyLink = `${CLIENT_URL}/verify-email?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
 
-  await sendMail({
+  sendMail({
     to: user.email,
     subject: "Verify your CreateSphere account",
     html: `
       <h2>Welcome to CreateSphere 🎨</h2>
       <p>Please verify your email to activate your account.</p>
-      <a href="${verifyLink}" target="_blank"> Verify Email</a>
+      <div style="margin: 20px 0;">
+        <a href="${verifyLink}" 
+           style="background-color: #1677ff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+          Verify Email
+        </a>
+      </div>
       <p>This link expires in ${verifyExpiryMinutes} minutes.</p>
+      <p>If the button above doesn't work, copy and paste this link: <br/> ${verifyLink}</p>
     `,
+  }).catch(err => {
+    console.error("Critical: Failed to send signup verification email to", email, err);
   });
 
-  //  Don’t give JWT before verification (recommended)
   return {
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      onboardingStatus: user.onboardingStatus,
-      emailVerified: user.emailVerified,
-    },
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    onboardingStatus: user.onboardingStatus,
   };
 };
 
