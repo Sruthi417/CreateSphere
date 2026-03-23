@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import { CLIENT_URL } from "./config/env.js";
 import router from "./routes.js";
 import path from "path";
 
@@ -12,7 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 // CORS
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: CLIENT_URL || "http://localhost:3000",
     credentials: true
   })
 );
