@@ -26,9 +26,9 @@ export const register = async (req, res) => {
 
 export const verifyEmailController = async (req, res) => {
   try {
-    const { token } = req.query;
+    const { token, email } = req.query;
 
-    const result = await verifyEmail(token);
+    const result = await verifyEmail(token, email);
 
 if (result?.alreadyVerified) {
   return res.status(200).json({
@@ -98,10 +98,10 @@ export const forgotPasswordController = async (req, res) => {
 
 export const resetPasswordController = async (req, res) => {
   try {
-    const { token } = req.query;
+    const { token, email } = req.query;
     const { newPassword } = req.body;
 
-    await resetPassword(token, newPassword);
+    await resetPassword(token, newPassword, email);
 
     return res.status(200).json({
       success: true,

@@ -4,10 +4,10 @@ import axiosInstance from './axios';
 export const authAPI = {
   register: (data) => axiosInstance.post('/auth/register', data),
   login: (data) => axiosInstance.post('/auth/login', data),
-  verifyEmail: (token) => axiosInstance.get(`/auth/verify-email?token=${token}`),
+  verifyEmail: (token, email) => axiosInstance.get(`/auth/verify-email?token=${token}${email ? `&email=${email}` : ''}`),
   resendVerification: (email) => axiosInstance.post('/auth/resend-verification', { email }),
   forgotPassword: (email) => axiosInstance.post('/auth/forgot-password', { email }),
-  resetPassword: (token, newPassword) => axiosInstance.post(`/auth/reset-password?token=${token}`, { newPassword }),
+  resetPassword: (token, newPassword, email) => axiosInstance.post(`/auth/reset-password?token=${token}${email ? `&email=${email}` : ''}`, { newPassword }),
   logout: () => axiosInstance.post('/auth/logout'),
 };
 

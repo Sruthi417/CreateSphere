@@ -1,6 +1,7 @@
 import User from "../users/user.model.js";
 import Product from "../products/product.model.js";
 import Review from "../reviews/review.model.js";
+import Tutorial from "../tutorials/tutorial.model.js";
 
 /* =========================================================
    START CREATOR ONBOARDING (user → creator_pending)

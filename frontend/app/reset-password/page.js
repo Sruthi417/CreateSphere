@@ -19,6 +19,7 @@ function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
+  const email = searchParams.get('email');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -42,7 +43,7 @@ function ResetPasswordContent() {
 
     setLoading(true);
     try {
-      const response = await authAPI.resetPassword(token, data.newPassword);
+      const response = await authAPI.resetPassword(token, data.newPassword, email);
       
       if (response.data?.success) {
         toast.success('Password reset successfully! You can now login with your new password.');

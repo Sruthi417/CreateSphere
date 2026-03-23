@@ -66,7 +66,7 @@ export const registerUser = async (data) => {
   });
 
   // ✅ Send email verification link
-  const verifyLink = `${CLIENT_URL}/verify-email?token=${rawToken}`;
+  const verifyLink = `${CLIENT_URL}/verify-email?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
 
   await sendMail({
     to: user.email,
@@ -96,43 +96,47 @@ export const registerUser = async (data) => {
 /* =========================================================
    VERIFY EMAIL
 ========================================================= */
-export const verifyEmail = async (token) => {
+export const verifyEmail = async (token, email) => {
   if (!token) throw new Error("Verification token required");
 
   const hashed = crypto.createHash("sha256").update(token).digest("hex");
 
-  const user = await User.findOne({
-    emailVerificationToken: hashed,
-    emailVerificationExpires: { $gt: new Date() },
-  }).select("+emailVerificationToken +emailVerificationExpires");
-
-  // 🔥 CASE 1: Token matches active verification
-  if (user) {
-    if (user.emailVerified) {
-      return { alreadyVerified: true };
-    }
-
-    user.emailVerified = true;
-    user.emailVerificationToken = null;
-    user.emailVerificationExpires = null;
-
-    await user.save();
-
-    return { verified: true };
+  let query = { emailVerificationToken: hashed };
+  if (email) {
+    query = { email: email.trim().toLowerCase() };
   }
 
-  // 🔥 CASE 2: Maybe already verified earlier (token used before)
-  const alreadyVerifiedUser = await User.findOne({
-    emailVerificationToken: null,
-    emailVerified: true,
-  });
+  const user = await User.findOne(query).select("+emailVerificationToken +emailVerificationExpires");
 
-  if (alreadyVerifiedUser) {
+  if (!user) {
+    throw new Error("Invalid verification link or user not found");
+  }
+
+  // If we found by email, must verify token matches
+  if (email && user.emailVerificationToken !== hashed) {
+     // If user is already verified and token is null, it's fine
+     if (user.emailVerified) {
+       return { alreadyVerified: true };
+     }
+     throw new Error("Invalid or expired verification token");
+  }
+
+  if (user.emailVerified) {
     return { alreadyVerified: true };
   }
 
-  // 🔥 CASE 3: Truly invalid or expired
-  throw new Error("Invalid or expired verification token");
+  if (user.emailVerificationExpires && user.emailVerificationExpires < new Date()) {
+    throw new Error("Verification link has expired. Please request a new one.");
+  }
+
+  // ✅ Success - Update user
+  user.emailVerified = true;
+  user.emailVerificationToken = null;
+  user.emailVerificationExpires = null;
+
+  await user.save();
+
+  return { verified: true };
 };
 
 
@@ -157,7 +161,7 @@ export const resendVerificationEmail = async (email) => {
   user.emailVerificationExpires = new Date(Date.now() + verifyExpiryMinutes * 60 * 1000);
   await user.save();
 
-  const verifyLink = `${CLIENT_URL}/verify-email?token=${rawToken}`;
+  const verifyLink = `${CLIENT_URL}/verify-email?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
 
 
   await sendMail({
@@ -239,7 +243,7 @@ export const forgotPassword = async (email) => {
 
   await user.save();
 
-  const resetLink = `${CLIENT_URL}/reset-password?token=${rawToken}`;
+  const resetLink = `${CLIENT_URL}/reset-password?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
 
   await sendMail({
     to: user.email,
@@ -259,22 +263,38 @@ export const forgotPassword = async (email) => {
 /* =========================================================
    RESET PASSWORD
 ========================================================= */
-export const resetPassword = async (token, newPassword) => {
+export const resetPassword = async (token, newPassword, email) => {
   if (!token) throw new Error("Reset token required");
   if (!newPassword || newPassword.length < 6) throw new Error("Password must be at least 6 characters");
 
   const hashed = crypto.createHash("sha256").update(token).digest("hex");
 
-  const user = await User.findOne({
-    passwordResetToken: hashed,
-    passwordResetExpires: { $gt: new Date() },
-  }).select("+passwordResetToken +passwordResetExpires");
+  let query = { passwordResetToken: hashed };
+  if (email) {
+    query = { email: email.trim().toLowerCase() };
+  }
 
-  if (!user) throw new Error("Invalid or expired reset token");
+  const user = await User.findOne(query).select("+passwordResetToken +passwordResetExpires");
+
+  if (!user) {
+    throw new Error("Invalid reset link or user not found");
+  }
+
+  // Verify token matches if we found by email
+  if (email && user.passwordResetToken !== hashed) {
+    throw new Error("Invalid or expired reset token");
+  }
+
+  if (user.passwordResetExpires && user.passwordResetExpires < new Date()) {
+    throw new Error("Reset link has expired");
+  }
 
   user.password = await bcrypt.hash(newPassword, 10);
   user.passwordResetToken = null;
   user.passwordResetExpires = null;
+
+  // Also verify email if they resetting password (logical)
+  user.emailVerified = true;
 
   await user.save();
 

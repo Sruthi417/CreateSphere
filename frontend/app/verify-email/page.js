@@ -12,6 +12,7 @@ import { Palette, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
+  const email = searchParams.get('email');
   const [status, setStatus] = useState('loading'); // loading, success, error
   const [message, setMessage] = useState('');
 
@@ -24,7 +25,7 @@ function VerifyEmailContent() {
       }
 
       try {
-        const response = await authAPI.verifyEmail(token);
+        const response = await authAPI.verifyEmail(token, email);
         
         console.log('Verification response:', response);
         console.log('Response data:', response.data);
