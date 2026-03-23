@@ -20,10 +20,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { getImageUrl, cn } from '@/lib/utils';
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Clock,
@@ -217,7 +217,7 @@ export default function TutorialDetailPage() {
     if (match && match[2].length === 11) {
       return match[2];
     }
-    
+
     // Fallback for direct IDs or other patterns
     const idRegExp = /^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/|shorts\/|live\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/;
     const idMatch = trimmedUrl.match(idRegExp);
@@ -227,7 +227,7 @@ export default function TutorialDetailPage() {
 
     // Last resort: simple 11 char check if everything else fails but it looks like a path
     if (trimmedUrl.length === 11) return trimmedUrl;
-    
+
     return null;
   };
 
@@ -339,15 +339,15 @@ export default function TutorialDetailPage() {
                       <BookOpen className="h-20 w-20 text-slate-300" />
                     </div>
                   )}
-                    <div 
-                      className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center"
-                      onClick={() => tutorial.videoUrl && openVideo(tutorial.videoUrl, tutorial.title)}
-                    >
-                      <div className="h-20 w-20 rounded-full bg-white/90 flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform cursor-pointer backdrop-blur-sm relative overflow-hidden">
-                         <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors" />
-                         <Play className="h-8 w-8 text-primary fill-primary ml-1 relative z-10" />
-                      </div>
+                  <div
+                    className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center"
+                    onClick={() => tutorial.videoUrl && openVideo(tutorial.videoUrl, tutorial.title)}
+                  >
+                    <div className="h-20 w-20 rounded-full bg-white/90 flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform cursor-pointer backdrop-blur-sm relative overflow-hidden">
+                      <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors" />
+                      <Play className="h-8 w-8 text-primary fill-primary ml-1 relative z-10" />
                     </div>
+                  </div>
                 </div>
               </motion.div>
             </div>
@@ -392,32 +392,32 @@ export default function TutorialDetailPage() {
                           >
                             <div className="px-6 pb-6 pt-2 border-t space-y-3">
                               {lesson.topics?.map((topic, tIdx) => (
-                                  <div
-                                    key={tIdx}
-                                    className={cn(
-                                      "flex items-center justify-between p-3 rounded-xl transition-all border border-transparent",
-                                      topic.videoUrl ? "hover:bg-primary/5 cursor-pointer hover:border-primary/20 group/topic" : "hover:bg-slate-50 opacity-80"
+                                <div
+                                  key={tIdx}
+                                  className={cn(
+                                    "flex items-center justify-between p-3 rounded-xl transition-all border border-transparent",
+                                    topic.videoUrl ? "hover:bg-primary/5 cursor-pointer hover:border-primary/20 group/topic" : "hover:bg-slate-50 opacity-80"
+                                  )}
+                                  onClick={() => topic.videoUrl && openVideo(topic.videoUrl, topic.title)}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    {topic.videoUrl ? (
+                                      <Play className="h-3.5 w-3.5 text-primary fill-primary/20 group-hover/topic:fill-primary/40 transition-all" />
+                                    ) : (
+                                      <Circle className="h-3 w-3 text-slate-300" />
                                     )}
-                                    onClick={() => topic.videoUrl && openVideo(topic.videoUrl, topic.title)}
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      {topic.videoUrl ? (
-                                        <Play className="h-3.5 w-3.5 text-primary fill-primary/20 group-hover/topic:fill-primary/40 transition-all" />
-                                      ) : (
-                                        <Circle className="h-3 w-3 text-slate-300" />
-                                      )}
-                                      <span className={cn("text-sm font-medium", topic.videoUrl ? "text-slate-700 font-bold" : "text-slate-400")}>{topic.title}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      {topic.videoUrl ? (
-                                        <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[9px] h-5 px-1.5 uppercase font-bold tracking-tight">
-                                          <Play className="h-2.5 w-2.5 mr-1 fill-primary" /> Topic Video
-                                        </Badge>
-                                      ) : (
-                                        <span className="text-[10px] text-muted-foreground italic px-2">Lecture</span>
-                                      )}
-                                    </div>
+                                    <span className={cn("text-sm font-medium", topic.videoUrl ? "text-slate-700 font-bold" : "text-slate-400")}>{topic.title}</span>
                                   </div>
+                                  <div className="flex items-center gap-2">
+                                    {topic.videoUrl ? (
+                                      <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[9px] h-5 px-1.5 uppercase font-bold tracking-tight">
+                                        <Play className="h-2.5 w-2.5 mr-1 fill-primary" /> Topic Video
+                                      </Badge>
+                                    ) : (
+                                      <span className="text-[10px] text-muted-foreground italic px-2">Lecture</span>
+                                    )}
+                                  </div>
+                                </div>
                               ))}
                             </div>
                           </motion.div>
@@ -657,13 +657,13 @@ export default function TutorialDetailPage() {
           </div>
           <div className="p-4 bg-slate-900 flex items-center justify-between">
             <h3 className="text-white font-medium truncate pr-4">{activeVideo.title}</h3>
-            <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-slate-400 hover:text-white"
-                onClick={() => setVideoModalOpen(false)}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-slate-400 hover:text-white"
+              onClick={() => setVideoModalOpen(false)}
             >
-                Close
+              Close
             </Button>
           </div>
         </DialogContent>

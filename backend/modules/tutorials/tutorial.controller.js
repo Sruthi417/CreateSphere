@@ -117,8 +117,12 @@ export const listAllTutorials = async (req, res) => {
       )
       .lean();
 
+    const userRecord = req.user ? await User.findById(req.user.id).select('enrolledTutorials') : null;
+    const enrolledIds = userRecord ? userRecord.enrolledTutorials.map(id => id.toString()) : [];
+
     // Auto-generate card preview text
     tutorials.forEach(t => {
+      t.isEnrolled = enrolledIds.includes(t._id.toString());
       t.shortDescription =
         t.description
           ? t.description.slice(0, 120) + "..."
@@ -174,7 +178,11 @@ export const listTutorialsByCategory = async (req, res) => {
       )
       .lean();
 
+    const userRecord = req.user ? await User.findById(req.user.id).select('enrolledTutorials') : null;
+    const enrolledIds = userRecord ? userRecord.enrolledTutorials.map(id => id.toString()) : [];
+
     tutorials.forEach(t => {
+      t.isEnrolled = enrolledIds.includes(t._id.toString());
       t.shortDescription =
         t.description
           ? t.description.slice(0, 120) + "..."
@@ -220,9 +228,15 @@ export const listCreatorTutorials = async (req, res) => {
       .populate("creatorId", "name avatarUrl creatorProfile")
       .populate("categoryId", "name")
       .sort({ createdAt: -1 })
-      .select(
-        "title thumbnailUrl creatorId categoryId averageRating reviewsCount type createdAt description tags difficulty"
-      );
+      .select("title thumbnailUrl creatorId categoryId averageRating reviewsCount type createdAt description tags difficulty")
+      .lean();
+
+    const userRecord = req.user ? await User.findById(req.user.id).select('enrolledTutorials') : null;
+    const enrolledIds = userRecord ? userRecord.enrolledTutorials.map(id => id.toString()) : [];
+
+    tutorials.forEach(t => {
+      t.isEnrolled = enrolledIds.includes(t._id.toString());
+    });
 
     return res.status(200).json({
       success: true,
@@ -428,7 +442,11 @@ export const searchTutorials = async (req, res) => {
       )
       .lean();
 
+    const userRecord = req.user ? await User.findById(req.user.id).select('enrolledTutorials') : null;
+    const enrolledIds = userRecord ? userRecord.enrolledTutorials.map(id => id.toString()) : [];
+
     results.forEach(t => {
+      t.isEnrolled = enrolledIds.includes(t._id.toString());
       t.shortDescription =
         t.description
           ? t.description.slice(0, 120) + "..."
@@ -473,10 +491,17 @@ export const enrollTutorial = async (req, res) => {
     }
 
     if (user.enrolledTutorials.includes(tutorialId)) {
+      // Unenroll
+      user.enrolledTutorials = user.enrolledTutorials.filter((id) => id.toString() !== tutorialId.toString());
+      await user.save();
+
+      tutorial.reviewsCount = Math.max((tutorial.reviewsCount || 1) - 1, 0);
+      await tutorial.save();
+
       return res.status(200).json({
         success: true,
-        message: "Already enrolled",
-        data: { isEnrolled: true }
+        message: "Unenrolled successfully",
+        data: { isEnrolled: false }
       });
     }
 

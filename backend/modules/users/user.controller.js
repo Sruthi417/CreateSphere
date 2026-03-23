@@ -329,3 +329,41 @@ export const getMyFavorites = async (req, res) => {
     return res.status(500).json({ success: false, message: "Failed to fetch favorites" });
   }
 };
+
+/* =========================================================
+   GET MY ENROLLED TUTORIALS
+========================================================= */
+export const getMyEnrolledTutorials = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .populate({
+        path: "enrolledTutorials",
+        select: "title thumbnailUrl creatorId categoryId averageRating reviewsCount type createdAt description tags difficulty",
+        populate: [
+          { path: "creatorId", select: "name avatarUrl creatorProfile" },
+          { path: "categoryId", select: "name" }
+        ]
+      });
+
+    if (!user)
+      return res.status(404).json({ success: false, message: "User not found" });
+
+    // Manually set isEnrolled to true since we are fetching from the user's enrolled list
+    const enrolledWithStatus = user.enrolledTutorials.map(t => {
+      const tutorialObj = t.toObject ? t.toObject() : t;
+      return {
+        ...tutorialObj,
+        isEnrolled: true
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: enrolledWithStatus,
+    });
+
+  } catch (error) {
+    console.error("getMyEnrolledTutorials Error:", error);
+    return res.status(500).json({ success: false, message: "Failed to fetch enrolled tutorials" });
+  }
+};

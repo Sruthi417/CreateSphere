@@ -28,6 +28,7 @@ export const userAPI = {
   addFavorite: (productId) => axiosInstance.post(`/users/favorites/${productId}`),
   removeFavorite: (productId) => axiosInstance.delete(`/users/favorites/${productId}`),
   getFavorites: (page = 1, limit = 12) => axiosInstance.get(`/users/me/favorites?page=${page}&limit=${limit}`),
+  getEnrolledTutorials: () => axiosInstance.get('/users/me/enrolled'),
 };
 
 // Creator API

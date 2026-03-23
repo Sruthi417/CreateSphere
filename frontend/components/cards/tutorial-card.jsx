@@ -1,15 +1,26 @@
 'use client';
 
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Clock, BarChart2, PlayCircle, FileText, BookOpen } from 'lucide-react';
+import { Clock, BarChart2, PlayCircle, FileText, BookOpen, Loader2, CheckCircle2 } from 'lucide-react';
 import SmartImage from '@/components/ui/smart-image';
 import StarRating from '@/components/star-rating';
+import { useAuthStore } from '@/store/auth-store';
+import { tutorialAPI } from '@/lib/api-client';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 export default function TutorialCard({ tutorial, index = 0 }) {
+  const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
+  const [isEnrolled, setIsEnrolled] = useState(tutorial.isEnrolled || false);
+  const [enrollLoading, setEnrollLoading] = useState(false);
+
   const difficultyColors = {
     beginner: 'bg-green-100 text-green-800',
     intermediate: 'bg-yellow-100 text-yellow-800',
@@ -19,6 +30,29 @@ export default function TutorialCard({ tutorial, index = 0 }) {
   const typeIcons = {
     course: BookOpen,
     free: PlayCircle,
+  };
+
+  const handleEnroll = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      toast.error('Please login to enroll');
+      router.push('/auth/login');
+      return;
+    }
+
+    setEnrollLoading(true);
+    try {
+      const response = await tutorialAPI.enroll(tutorial._id);
+      const newlyEnrolled = response.data?.data?.isEnrolled;
+      setIsEnrolled(newlyEnrolled);
+      toast.success(newlyEnrolled ? 'Enrolled Course!' : 'Unenrolled');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update enrollment');
+    } finally {
+      setEnrollLoading(false);
+    }
   };
 
   const TypeIcon = typeIcons[tutorial.type] || BookOpen;
@@ -73,20 +107,26 @@ export default function TutorialCard({ tutorial, index = 0 }) {
               ))}
             </div>
 
-            <div className="flex items-center justify-between mt-auto">
-              {/* <div className="flex items-center gap-2">
-                <Badge
-                  variant="secondary"
-                  className={`${difficultyColors[tutorial.difficulty] || ''} text-[10px] font-bold uppercase px-2 py-0 h-5`}
-                >
-                  {tutorial.difficulty}
-                </Badge>
-              </div> */}
+            <div className="flex items-center justify-between mt-auto mb-6">
               <div className="flex items-center gap-1 text-xs font-bold text-slate-700">
                 <StarRating rating={tutorial.averageRating || 0} size="sm" />
                 <span>{tutorial.averageRating?.toFixed(1) || '0.0'}</span>
               </div>
             </div>
+
+            <Button
+              className={`w-full h-10 rounded-xl font-bold transition-all duration-300 ${isEnrolled ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'}`}
+              variant={isEnrolled ? "default" : "secondary"}
+              onClick={handleEnroll}
+              disabled={enrollLoading}
+            >
+              {enrollLoading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : isEnrolled ? (
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+              ) : null}
+              {isEnrolled ? 'Enrolled Course' : 'Enroll Course'}
+            </Button>
           </CardContent>
         </Card>
       </Link>

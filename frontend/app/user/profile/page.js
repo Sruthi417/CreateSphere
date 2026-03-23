@@ -11,6 +11,7 @@ import { useAuthStore } from '@/store/auth-store';
 import Navbar from '@/components/navbar';
 import Footer from '@/components/footer';
 import AvatarUpload from '@/components/avatar-upload';
+import TutorialCard from '@/components/cards/tutorial-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,7 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { User, Mail, Calendar, Loader2, Save } from 'lucide-react';
+import { User, Mail, Calendar, Loader2, Save, BookOpen } from 'lucide-react';
 
 export default function UserProfilePage() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function UserProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState(null);
+  const [enrolledTutorials, setEnrolledTutorials] = useState([]);
   console.log(profile);
 
   const {
@@ -55,10 +57,14 @@ export default function UserProfilePage() {
 
   const fetchProfile = async () => {
     try {
-      const response = await userAPI.getProfile();
-      const data = response.data.data;
+      const [profileRes, enrolledRes] = await Promise.all([
+        userAPI.getProfile(),
+        userAPI.getEnrolledTutorials().catch(() => ({ data: { data: [] } }))
+      ]);
+      const data = profileRes.data.data;
       setProfile(data);
       setUser(data);
+      setEnrolledTutorials(enrolledRes.data?.data || []);
       reset({
         name: data.name || '',
         avatarUrl: data.avatarUrl || '',
@@ -185,6 +191,29 @@ export default function UserProfilePage() {
                   </form>
                 </CardContent>
               </Card>
+
+              {/* Enrolled Tutorials */}
+              <div className="mt-12">
+                <div className="flex items-center gap-2 mb-6">
+                  <BookOpen className="h-6 w-6 text-primary" />
+                  <h2 className="text-2xl font-bold">Enrolled Tutorials</h2>
+                </div>
+                {enrolledTutorials.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-muted-foreground mb-4">You have not enrolled in any tutorials yet</p>
+                      <Button onClick={() => router.push('/explore/tutorials')}>Explore Tutorials</Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {enrolledTutorials.map((tutorial, index) => (
+                      <TutorialCard key={tutorial._id} tutorial={tutorial} index={index} />
+                    ))}
+                  </div>
+                )}
+              </div>
             </motion.div>
           </div>
         </div>

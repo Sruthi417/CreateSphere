@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authMiddleware } from "../../middlewares/auth.middleware.js";
+import { authMiddleware, optionalAuthMiddleware } from "../../middlewares/auth.middleware.js";
 import { requireRole } from "../../middlewares/role.middleware.js";
 import { uploadMiddleware } from "../../middlewares/upload.middleware.js";
 
@@ -24,13 +24,13 @@ const tutorialRouter = Router();
 // PUBLIC ROUTES
 //
 
-tutorialRouter.get("/", listAllTutorials);
+tutorialRouter.get("/", optionalAuthMiddleware, listAllTutorials);
 
-tutorialRouter.get("/search", searchTutorials);
+tutorialRouter.get("/search", optionalAuthMiddleware, searchTutorials);
 
-tutorialRouter.get("/category/:categoryId", listTutorialsByCategory);
+tutorialRouter.get("/category/:categoryId", optionalAuthMiddleware, listTutorialsByCategory);
 
-tutorialRouter.get("/creator/:creatorId", listCreatorTutorials);
+tutorialRouter.get("/creator/:creatorId", optionalAuthMiddleware, listCreatorTutorials);
 
 
 //
@@ -101,7 +101,7 @@ tutorialRouter.post(
 // MUST BE LAST — PUBLIC FULL VIEW
 //
 
-tutorialRouter.get("/:tutorialId", getTutorial);
+tutorialRouter.get("/:tutorialId", optionalAuthMiddleware, getTutorial);
 
 // Enroll in tutorial
 tutorialRouter.post("/:tutorialId/enroll", authMiddleware, enrollTutorial);

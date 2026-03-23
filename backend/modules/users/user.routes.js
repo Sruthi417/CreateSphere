@@ -13,7 +13,8 @@ import {
 
   addFavoriteProduct,
   removeFavoriteProduct,
-  getMyFavorites
+  getMyFavorites,
+  getMyEnrolledTutorials
 
 } from "./user.controller.js";
 
@@ -37,5 +38,7 @@ userRoutes.post("/favorites/:productId", authMiddleware, addFavoriteProduct);
 userRoutes.delete("/favorites/:productId", authMiddleware, removeFavoriteProduct);
 userRoutes.get("/me/favorites", authMiddleware, getMyFavorites);
 
+// ---------- ENROLLED ----------
+userRoutes.get("/me/enrolled", authMiddleware, getMyEnrolledTutorials);
 
 export default userRoutes;
