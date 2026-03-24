@@ -94,6 +94,10 @@ export default function ProductDetailPage() {
       toast.error('Please login to add favorites');
       return;
     }
+    if (isOwner) {
+      toast.error('You cannot add your own product to favorites');
+      return;
+    }
     try {
       if (favorited) {
         await userAPI.removeFavorite(productId);
@@ -325,10 +329,12 @@ export default function ProductDetailPage() {
               )}
 
               <div className="flex gap-2">
+              {!isOwner && (
                 <Button onClick={handleFavorite} variant={favorited ? 'default' : 'outline'} className="flex-1">
                   <Heart className={`h-4 w-4 mr-2 ${favorited ? 'fill-current' : ''}`} />
                   {favorited ? 'Favorited' : 'Add to Favorites'}
                 </Button>
+              )}
                 <Button variant="outline" onClick={() => setReportOpen(true)}>
                   <Flag className="h-4 w-4" />
                 </Button>

@@ -193,16 +193,26 @@ export default function TutorialDetailPage() {
       return;
     }
 
-    if (isEnrolled) return;
+    if (isOwner) {
+      toast.error('You cannot enroll in your own tutorial');
+      return;
+    }
 
     setEnrollLoading(true);
     try {
-      await tutorialAPI.enroll(tutorialId);
-      setIsEnrolled(true);
-      toast.success('Successfully enrolled in the course!');
+      const response = await tutorialAPI.enroll(tutorialId);
+      const enrolledStatus = response.data.data.isEnrolled;
+      setIsEnrolled(enrolledStatus);
+
+      if (enrolledStatus) {
+        toast.success('Successfully enrolled in the course!');
+      } else {
+        toast.success('Successfully unenrolled from the course');
+      }
+
       fetchTutorial(); // Refresh to get updated learner count
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to enroll');
+      toast.error(error.response?.data?.message || 'Failed to update enrollment');
     } finally {
       setEnrollLoading(false);
     }
@@ -553,10 +563,11 @@ export default function TutorialDetailPage() {
                       <Button
                         className="flex-1 py-7 rounded-2xl text-lg font-bold shadow-lg shadow-primary/20"
                         onClick={handleEnroll}
-                        disabled={enrollLoading || isEnrolled}
+                        disabled={enrollLoading}
+                        variant={isEnrolled ? "outline" : "default"}
                       >
-                        {enrollLoading ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : isEnrolled ? <CheckCircle2 className="h-5 w-5 mr-2" /> : null}
-                        {isEnrolled ? 'Enrolled' : 'Enroll This Course'}
+                        {enrollLoading ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : null}
+                        {isEnrolled ? 'Enrolled' : 'Enroll Now'}
                       </Button>
                       <Button
                         variant="outline"

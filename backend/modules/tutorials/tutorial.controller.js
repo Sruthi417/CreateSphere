@@ -485,12 +485,21 @@ export const enrollTutorial = async (req, res) => {
       return res.status(404).json({ success: false, message: "Tutorial not found" });
     }
 
+    if (tutorial.creatorId.toString() === userId.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: "You cannot enroll in your own tutorial"
+      });
+    }
+
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    if (user.enrolledTutorials.includes(tutorialId)) {
+    const isAlreadyEnrolled = user.enrolledTutorials.some((id) => id.toString() === tutorialId.toString());
+
+    if (isAlreadyEnrolled) {
       // Unenroll
       user.enrolledTutorials = user.enrolledTutorials.filter((id) => id.toString() !== tutorialId.toString());
       await user.save();
@@ -508,7 +517,7 @@ export const enrollTutorial = async (req, res) => {
     user.enrolledTutorials.push(tutorialId);
     await user.save();
 
-    // Increment learners count (using reviewsCount as proxy or adding learners field)
+    // Increment learners count (using reviewsCount as proxy as per current codebase)
     tutorial.reviewsCount = (tutorial.reviewsCount || 0) + 1;
     await tutorial.save();
 

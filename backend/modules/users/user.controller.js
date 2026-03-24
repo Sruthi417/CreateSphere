@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import User from "./user.model.js";
+import Product from "../products/product.model.js";
 
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -210,6 +211,18 @@ export const addFavoriteProduct = async (req, res) => {
 
     if (!user)
       return res.status(404).json({ success: false, message: "User not found" });
+
+    // Check if the product exists and belongs to the user
+    const product = await Product.findById(productId);
+    if (!product)
+      return res.status(404).json({ success: false, message: "Product not found" });
+
+    if (product.creatorId.toString() === req.user.id.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: "You cannot add your own product to favorites"
+      });
+    }
 
     if (user.favoriteProducts.includes(productId))
       return res.status(200).json({ success: true, message: "Already in favorites" });

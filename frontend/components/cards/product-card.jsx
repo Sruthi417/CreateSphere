@@ -16,9 +16,12 @@ import { toast } from 'sonner';
 import ProductImage from '@/components/ui/product-image';
 
 export default function ProductCard({ product, index = 0, isFavorited = false }) {
-  const { isAuthenticated, favoritedProducts, toggleFavoriteProduct } = useAuthStore();
+  const { isAuthenticated, user, favoritedProducts, toggleFavoriteProduct } = useAuthStore();
   const favorited = favoritedProducts.includes(product._id);
   const [loading, setLoading] = useState(false);
+
+  const productCreatorId = typeof product.creatorId === 'object' ? product.creatorId?._id : product.creatorId;
+  const isOwner = user?._id === productCreatorId;
 
   const creator =
     product?.creatorId && typeof product.creatorId === 'object' ? product.creatorId : null;
@@ -32,6 +35,11 @@ export default function ProductCard({ product, index = 0, isFavorited = false })
 
     if (!isAuthenticated) {
       toast.error('Please login to add favorites');
+      return;
+    }
+
+    if (isOwner) {
+      toast.error('You cannot add your own product to favorites');
       return;
     }
 
@@ -79,15 +87,17 @@ export default function ProductCard({ product, index = 0, isFavorited = false })
                 </Avatar>
               </div>
             )}
-            <Button
-              variant="secondary"
-              size="icon"
-              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-              onClick={handleFavorite}
-              disabled={loading}
-            >
-              <Heart className={`h-4 w-4 ${favorited ? 'fill-red-500 text-red-500' : ''}`} />
-            </Button>
+            {!isOwner && (
+              <Button
+                variant="secondary"
+                size="icon"
+                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                onClick={handleFavorite}
+                disabled={loading}
+              >
+                <Heart className={`h-4 w-4 ${favorited ? 'fill-red-500 text-red-500' : ''}`} />
+              </Button>
+            )}
             {product.isCustomizable && (
               <Badge className="absolute top-2 left-2 z-10" variant="secondary">
                 Customizable
