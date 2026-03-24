@@ -36,6 +36,13 @@ export const submitReport = async (req, res) => {
       target.creatorProfile?._id ||
       target._id;
 
+    if (reporterId.toString() === creatorId.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: "You cannot report your own content or account"
+      });
+    }
+
     await Report.create({
       reporterId,
       creatorId,
@@ -74,7 +81,7 @@ export const submitReport = async (req, res) => {
       action
     });
 
-  } catch {
+  } catch (err) {
     console.error("Submit report error:", err);
     return res.status(500).json({
       success: false,
@@ -101,7 +108,7 @@ export const getReportsForTarget = async (req, res) => {
       data: reports
     });
 
-  } catch {
+  } catch (err) {
     console.error("view report error:", err);
     return res.status(500).json({
       success: false,
