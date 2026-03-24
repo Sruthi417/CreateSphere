@@ -56,7 +56,7 @@ export const createCategory = async (req, res) => {
 export const getActiveCategories = async (req, res) => {
   try {
     const categories = await Category.find({ isActive: true })
-      .select("name slug type iconUrl");
+      .select("name slug type description iconUrl");
 
     return res.status(200).json({
       success: true,
