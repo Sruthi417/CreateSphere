@@ -21,7 +21,7 @@ axiosInstance.interceptors.request.use(
 
       // Select the appropriate token based on the API target
       const isAdminApi = config.url.startsWith('/admin');
-      const token = isAdminApi ? (adminToken || authToken) : authToken;
+      const token = adminToken || authToken;
 
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
