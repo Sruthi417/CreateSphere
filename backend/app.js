@@ -15,6 +15,8 @@ const allowedOrigins = [
   CLIENT_URL,
   "http://localhost:3000",
   "http://localhost:3001",
+  "https://quickbay.in",
+  "https://www.quickbay.in",
   "https://craft-sphere.vercel.app",
   "https://www.craft-sphere.vercel.app",
 ].filter(Boolean);
