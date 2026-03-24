@@ -297,7 +297,7 @@ export default function ProductDetailPage() {
                   </div>
                   {product.estimatedPrice && (
                     <span className="text-2xl font-bold text-primary">
-                      ${product.estimatedPrice}
+                      ₹{product.estimatedPrice}
                     </span>
                   )}
                 </div>

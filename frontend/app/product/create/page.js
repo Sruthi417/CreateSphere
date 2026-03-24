@@ -177,7 +177,7 @@ export default function CreateProductPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="estimatedPrice">Estimated Price ($)</Label>
+                      <Label htmlFor="estimatedPrice">Estimated Price (₹)</Label>
                       <Input
                         id="estimatedPrice"
                         type="number"

@@ -125,7 +125,7 @@ export default function ProductCard({ product, index = 0, isFavorited = false })
               </div>
               {product.estimatedPrice && (
                 <span className="font-semibold text-primary">
-                  ${product.estimatedPrice}
+                  ₹{product.estimatedPrice}
                 </span>
               )}
             </div>
