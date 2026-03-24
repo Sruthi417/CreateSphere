@@ -104,6 +104,29 @@ export default function CreatorOnboardingPage() {
     }
   };
 
+  const handleReactivate = async () => {
+    setLoading(true);
+    try {
+      const response = await creatorAPI.reactivate();
+      const updatedUser = response.data.data;
+
+      // Update user state
+      setUser({
+        ...user,
+        role: 'creator',
+        onboardingStatus: 'creator_completed',
+        creatorProfile: updatedUser.creatorProfile,
+      });
+
+      toast.success('Creator profile reactivated!');
+      router.push('/creator/dashboard');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to reactivate profile');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCategoryToggle = (categoryId) => {
     setFormData((prev) => ({
       ...prev,
@@ -119,7 +142,7 @@ export default function CreatorOnboardingPage() {
       <main className="container px-4 py-12">
         <div className="max-w-2xl mx-auto">
           {/* Step 1: Welcome */}
-          {step === 1 && (
+          {step === 1 && onboardingStatus !== 'creator_deactivated' && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -181,6 +204,40 @@ export default function CreatorOnboardingPage() {
                     {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                     Get Started
                     <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* Reactivate View */}
+          {onboardingStatus === 'creator_deactivated' && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              <Card className="border-primary/20 bg-primary/5">
+                <CardHeader className="text-center">
+                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <Sparkles className="h-8 w-8 text-primary" />
+                  </div>
+                  <CardTitle className="text-2xl">Welcome Back!</CardTitle>
+                  <CardDescription>
+                    Your creator profile is currently deactivated. Reactivate it to start sharing your products and tutorials again.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-center text-muted-foreground">
+                    All your previous products, tutorials, and settings will be restored.
+                  </p>
+                  <Button
+                    onClick={handleReactivate}
+                    className="w-full"
+                    disabled={loading}
+                    size="lg"
+                  >
+                    {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                    Reactivate My Creator Profile
                   </Button>
                 </CardContent>
               </Card>
