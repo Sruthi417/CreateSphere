@@ -844,7 +844,7 @@ export default function AdminDashboardPage() {
                   </div>
                 ) : (
                   categories.map((cat) => (
-                    <Card key={cat._id} className={!cat.isActive ? 'opacity-50' : ''}>
+                    <Card key={cat._id} className={!cat.isActive ? 'opacity-100' : ''}>
                       <CardHeader className="p-4 pb-2">
                         <div className="flex justify-between items-start">
                           <CardTitle className="text-lg">{cat.name}</CardTitle>
